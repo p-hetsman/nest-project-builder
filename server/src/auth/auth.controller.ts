@@ -6,7 +6,10 @@ import {
   // HttpStatus,
   UseGuards,
   Request,
+  Req,
+  Res,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
@@ -22,7 +25,7 @@ export class AuthController {
   //   return this.authService.signIn(signInDto.username, signInDto.password);
   // }
 
-  @UseGuards(LocalAuthGuard)
+  @UseGuards(AuthGuard())
   @Post('login')
   async login(@Request() req) {
     return this.authService.login(req.user);
@@ -37,5 +40,26 @@ export class AuthController {
   @Get('profile')
   getProfile(@Request() req) {
     return req.user;
+  }
+
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  async googleLogin() {
+    // Initiates the Google authentication process
+  }
+
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  async googleLoginCallback(@Req() req) {
+    // Handles the Google authentication callback
+
+    const { access_token } = await this.authService.login({
+      username: req.user.email,
+      _id: req.user.id,
+    });
+
+    return {
+      access_token,
+    };
   }
 }

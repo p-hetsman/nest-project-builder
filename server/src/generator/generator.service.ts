@@ -70,6 +70,24 @@ export class GeneratorService {
     return writeFile(resultFileName, content);
   };
 
+  private addModulesInPackageJson = async (
+    options: GenerateOptions,
+    generatedProjectFolder: string,
+  ) => {
+    const optionsToModules = {};
+
+    try {
+      await execPromise(
+        `cd ${generatedProjectFolder} && npm install --save ${this.mapOptionsToArrayOfData(
+          options,
+          optionsToModules,
+        ).join(' ')}`,
+      );
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
   private generateMainTs = async (
     options: GenerateOptions,
     generatedProjectFolder: string,
@@ -147,6 +165,7 @@ export class GeneratorService {
     await Promise.all([
       await this.copyFilesToSrc(options, generatedProjectFolder),
       await this.generateMainTs(options, generatedProjectFolder),
+      await this.addModulesInPackageJson(options, generatedProjectFolder),
     ]);
 
     // await this.generateAppModule(generatedProjectFolder);
