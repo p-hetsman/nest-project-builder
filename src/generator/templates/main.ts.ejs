@@ -1,0 +1,31 @@
+import { NestFactory } from '@nestjs/core';
+import { Logger<%= nestjsCommonImport %> } from '@nestjs/common';
+
+import { AppModule } from './app.module';
+
+<% imports.forEach(imports => { -%>
+<%- imports %>
+<% }) -%>
+
+const PORT = 8081;
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule, {
+<% nestFactoryOptions.forEach(nestFactoryOption => { -%>
+    <%- nestFactoryOption.key %>: <%- nestFactoryOption.value %>,
+<% }); -%>
+  });
+
+<% globalPipes.forEach(globalPipe => { -%>
+  <%- globalPipe %>
+<% }) -%>
+
+<% globalFilters.forEach(globalFilter => { -%>
+  <%- globalFilter %>
+<% }) -%>
+
+  await app.listen(PORT);
+  Logger.log(`Server listening at ${PORT}`, 'main');
+}
+
+bootstrap();
