@@ -1,0 +1,25 @@
+.sidebarContent {
+    height: 100%;
+    margin: 0 0 8px;
+    padding: 40px;
+    overflow: auto;
+}
+.noBullets {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    list-style-type: none;
+}
+.db-list {
+    display: flex;
+    align-items: center;
+}
+.db-list-im {
+    width: 24px;
+    height: 24px;
+    vertical-align: -7px;
+    margin-right: 5px;
+}
+.ds-select {
+    user-select: none;
+}
