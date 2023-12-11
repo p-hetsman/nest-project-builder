@@ -10,6 +10,9 @@ const nextConfig = {
     includePaths: [path.join(__dirname, "styles")],
   },
   reactStrictMode: true,
+  env: {
+    GENERATOR_URL: process.env.GENERATOR_URL,
+  },
 };
 
 module.exports = nextConfig;
