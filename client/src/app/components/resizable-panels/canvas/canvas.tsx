@@ -7,7 +7,9 @@ import { Layer, Stage } from 'react-konva';
 
 function Canvas({ data }) {
     const dragUrl = data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const stageRef = useRef<any>(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const layerRef = useRef<any>(null);
 
     const onDrop = (e: React.DragEvent<HTMLDivElement>): void => {

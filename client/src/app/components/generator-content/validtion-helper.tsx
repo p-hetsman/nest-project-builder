@@ -12,20 +12,26 @@ export const handleSubmit = async (event, formData) => {
     }
 
     try {
-        const response = await fetch(process.env.GENERATOR_URL, {
-            method: 'Post',
-            headers: {
-                'Content-Type': 'application/json',
+        const response = await fetch(
+            process.env.GENERATOR_URL ?? 'url_var_error',
+            {
+                method: 'Post',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
             },
-            body: JSON.stringify(formData),
-        });
+        );
 
         if (response.ok) {
+            // eslint-disable-next-line no-console
             console.log('Form submitted successfully!');
         } else {
+            // eslint-disable-next-line no-console
             console.error('Form submission failed.');
         }
     } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('An error occurred while submitting the form:', error);
     }
 };

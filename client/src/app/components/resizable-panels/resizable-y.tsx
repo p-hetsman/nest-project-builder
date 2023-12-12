@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function resizableY(resizer: any) {
     resizer.addEventListener('mousedown', onmousedown);
     resizer.addEventListener('touchstart', ontouchstart);
@@ -28,6 +29,7 @@ export function resizableY(resizer: any) {
             t.style.flex = '1 0';
         }
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     function ontouchend(e: any) {
         e.preventDefault();
         resizer.removeEventListener('touchmove', ontouchmove);
@@ -65,6 +67,7 @@ export function resizableY(resizer: any) {
             t.style.flex = '1 0';
         }
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     function onmouseup(e: any) {
         e.preventDefault();
         document.removeEventListener('mousemove', onmousemove);
