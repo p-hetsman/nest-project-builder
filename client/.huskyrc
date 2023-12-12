@@ -1,0 +1,9 @@
+{
+    "hooks": {
+        "pre-commit": "npx lint-staged"
+    },
+    "gitParams": [
+        "-c",
+        "core.hooksPath=my-project/.git/hooks"
+    ]
+}
