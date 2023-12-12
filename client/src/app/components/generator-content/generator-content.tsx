@@ -1,21 +1,39 @@
 import { useState } from 'react';
 import { Button, Checkbox, Input } from '@nextui-org/react';
-import { handleSubmit, isValidProjectName } from './validtion-helper';
+
+import { isValidProjectName } from './validtion-helper';
 import { checkboxList, initFormState } from './generator-constants';
+import ModalPopUp from './modal-popup/modal-popup';
+import { handleSubmit } from './submit-helper';
 
 export default function SubmitForm() {
     const [formData, setFormData] = useState(initFormState);
     const [isButtonDisabled, setButtonDisabled] = useState(false);
-    const { projectName } = formData;
     const [checkboxStates, setCheckboxStates] = useState(
         checkboxList.reduce(
             (acc, item) => ({ ...acc, [item.name]: false }),
             {},
         ),
     );
+    const [submissionText, setSubmissionText] = useState('');
+    const [isOpen, setIsOpen] = useState(false);
+
+    const { projectName } = formData;
+
+    const handleOpenModal = () => {
+        setIsOpen(true);
+    };
 
     const submission = e => {
-        handleSubmit(e, formData);
+        const submissionResult = handleSubmit(e, formData);
+
+        submissionResult.then(item => {
+            if (item) {
+                setSubmissionText(item?.text);
+                handleOpenModal();
+            }
+        });
+
         setFormData(initFormState);
         setCheckboxStates(
             checkboxList.reduce(
@@ -98,6 +116,13 @@ export default function SubmitForm() {
                     Submit
                 </Button>
             </form>
+            {isOpen && (
+                <ModalPopUp
+                    isOpen={isOpen}
+                    message={submissionText}
+                    onOpenChange={setIsOpen}
+                />
+            )}
         </div>
     );
 }
