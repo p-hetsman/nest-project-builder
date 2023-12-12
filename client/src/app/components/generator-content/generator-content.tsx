@@ -5,6 +5,7 @@ import { isValidProjectName } from './validtion-helper';
 import { checkboxList, initFormState } from './generator-constants';
 import ModalPopUp from './modal-popup/modal-popup';
 import { handleSubmit } from './submit-helper';
+import SpinnerOverlay from './spinner-overlay';
 
 export default function SubmitForm() {
     const [formData, setFormData] = useState(initFormState);
@@ -17,6 +18,7 @@ export default function SubmitForm() {
     );
     const [submissionText, setSubmissionText] = useState('');
     const [isOpen, setIsOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     const { projectName } = formData;
 
@@ -26,9 +28,10 @@ export default function SubmitForm() {
 
     const submission = e => {
         const submissionResult = handleSubmit(e, formData);
-
+        setIsLoading(true);
         submissionResult.then(item => {
             if (item) {
+                setIsLoading(false);
                 setSubmissionText(item?.text);
                 handleOpenModal();
             }
@@ -71,7 +74,7 @@ export default function SubmitForm() {
 
     return (
         <div>
-            <br />
+            {isLoading && <SpinnerOverlay />}
             <form className="flex flex-col  gap-4 " onSubmit={submission}>
                 <Input
                     autoComplete="off"
@@ -116,6 +119,7 @@ export default function SubmitForm() {
                     Submit
                 </Button>
             </form>
+
             {isOpen && (
                 <ModalPopUp
                     isOpen={isOpen}
