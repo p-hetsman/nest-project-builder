@@ -17,7 +17,7 @@ export class GeneratorService {
     optionsTo: Record<string, T[]>,
   ) => {
     return Object.keys(options).reduce((acc, key) => {
-      if (optionsTo[key]) {
+      if (optionsTo[key] && options[key]) {
         return [...acc, ...optionsTo[key]];
       }
 
