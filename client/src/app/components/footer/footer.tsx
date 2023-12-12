@@ -1,19 +1,19 @@
-import Image from "next/image";
-import stylesGlobal from "../../../../styles/Home.module.css";
+import Image from 'next/image';
+import stylesGlobal from '../../../../styles/Home.module.css';
 
 export default function Footer() {
-  return (
-    <footer>
-      <a href="/#" target="_blank" rel="noopener noreferrer">
-        Powered by{" "}
-        <Image
-          src="/vercel.svg"
-          alt="Vercel"
-          className={stylesGlobal.logo}
-          width={60}
-          height={60}
-        />
-      </a>
-    </footer>
-  );
+    return (
+        <footer>
+            <a href="/#" rel="noopener noreferrer" target="_blank">
+                Powered by{' '}
+                <Image
+                    alt="Vercel"
+                    className={stylesGlobal.logo}
+                    height={60}
+                    src="/vercel.svg"
+                    width={60}
+                />
+            </a>
+        </footer>
+    );
 }

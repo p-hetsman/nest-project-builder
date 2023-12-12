@@ -1,4 +1,4 @@
 export const enum dbTypes {
-  SQL = "SQL",
-  noSQL = "noSql",
+    SQL = 'SQL',
+    noSQL = 'noSql',
 }
