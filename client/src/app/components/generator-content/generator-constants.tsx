@@ -3,6 +3,7 @@ export const checkboxList = [
     { name: 'logger', label: 'Logger' },
     { name: 'validation', label: 'Validation' },
     { name: 'cors', label: 'Cors' },
+    { name: 'swagger', label: 'Swagger' },
 ];
 
 export const initFormState = {
@@ -11,4 +12,5 @@ export const initFormState = {
     logger: false,
     validation: false,
     cors: false,
+    swagger: false,
 };
