@@ -24,8 +24,8 @@ async function bootstrap() {
   <%- globalFilter %>
 <% }) -%>
 
-<% cors.forEach(globalPipe => { -%>
-  <%- cors %>
+<% globalOptionsConfig.forEach(globalOption => { -%>
+  <%- globalOption %>
 <% }) -%>
 
   await app.listen(PORT);

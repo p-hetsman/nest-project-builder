@@ -20,4 +20,8 @@ export class GenerateDto {
   @IsOptional()
   @IsBoolean()
   cors: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  swagger: boolean;
 }

@@ -7,6 +7,10 @@ import * as ejs from 'ejs';
 import { rimraf } from 'rimraf';
 
 import { GenerateOptions } from './types/generate-options';
+import {
+  generateCorsConfigOptions,
+  generateSwaggerConfigOptions,
+} from './constants';
 
 const execPromise = promisify(exec);
 
@@ -74,7 +78,9 @@ export class GeneratorService {
     options: GenerateOptions,
     generatedProjectFolder: string,
   ) => {
-    const optionsToModules = {};
+    const optionsToModules = {
+      swagger: ['@nestjs/swagger'],
+    };
 
     try {
       await execPromise(
@@ -96,6 +102,9 @@ export class GeneratorService {
       allExceptions: [
         `import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';`,
       ],
+      swagger: [
+        `import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';`,
+      ],
     };
 
     const optionsToGlobalFilters = {
@@ -106,8 +115,9 @@ export class GeneratorService {
       validation: ['app.useGlobalPipes(new ValidationPipe());'],
     };
 
-    const optionsToCors = {
-      cors: ['app.enableCors();'],
+    const optionsAppConfig = {
+      cors: [await generateCorsConfigOptions()],
+      swagger: [await generateSwaggerConfigOptions()],
     };
 
     const optionsToNestFactoryOptions = {
@@ -138,7 +148,10 @@ export class GeneratorService {
         options,
         optionsToGlobalFilters,
       ),
-      cors: this.mapOptionsToArrayOfData(options, optionsToCors),
+      globalOptionsConfig: this.mapOptionsToArrayOfData(
+        options,
+        optionsAppConfig,
+      ),
     };
 
     return this.generateFile(

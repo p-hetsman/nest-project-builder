@@ -1,7 +1,7 @@
 {
   "name": "nest-project-builder",
   "version": "0.0.1",
-  "description": "",
+  "description": "nestjs project builder",
   "author": "",
   "private": true,
   "license": "UNLICENSED",
