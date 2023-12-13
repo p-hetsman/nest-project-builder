@@ -9,7 +9,7 @@ export default function Generator() {
             <Head>
                 <title>Generator tool</title>
             </Head>
-            <div className="w-screen h-screen flex items-start justify-center  text-foreground bg-background">
+            <div className="w-screen h-screen flex items-start justify-center  text-foreground bg-background m-top-4">
                 <Gen />
             </div>
         </NextUIProvider>
