@@ -80,6 +80,7 @@ export class GeneratorService {
   ) => {
     const optionsToModules = {
       swagger: ['@nestjs/swagger'],
+      helmet: ['helmet'],
     };
 
     try {
@@ -105,6 +106,7 @@ export class GeneratorService {
       swagger: [
         `import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';`,
       ],
+      helmet: [`import helmet from 'helmet';`],
     };
 
     const optionsToGlobalFilters = {
@@ -118,6 +120,7 @@ export class GeneratorService {
     const optionsAppConfig = {
       cors: [await generateCorsConfigOptions()],
       swagger: [await generateSwaggerConfigOptions()],
+      helmet: ['app.use(helmet());'],
     };
 
     const optionsToNestFactoryOptions = {
