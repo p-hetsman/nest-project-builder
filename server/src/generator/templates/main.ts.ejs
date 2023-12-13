@@ -24,6 +24,10 @@ async function bootstrap() {
   <%- globalFilter %>
 <% }) -%>
 
+<% cors.forEach(globalPipe => { -%>
+  <%- cors %>
+<% }) -%>
+
   await app.listen(PORT);
   Logger.log(`Server listening at ${PORT}`, 'main');
 }

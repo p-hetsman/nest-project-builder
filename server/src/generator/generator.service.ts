@@ -106,6 +106,10 @@ export class GeneratorService {
       validation: ['app.useGlobalPipes(new ValidationPipe());'],
     };
 
+    const optionsToCors = {
+      cors: ['app.enableCors();'],
+    };
+
     const optionsToNestFactoryOptions = {
       logger: [
         {
@@ -134,6 +138,7 @@ export class GeneratorService {
         options,
         optionsToGlobalFilters,
       ),
+      cors: this.mapOptionsToArrayOfData(options, optionsToCors),
     };
 
     return this.generateFile(

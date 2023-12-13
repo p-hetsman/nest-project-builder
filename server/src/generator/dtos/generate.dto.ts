@@ -16,4 +16,8 @@ export class GenerateDto {
   @IsOptional()
   @IsBoolean()
   validation: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  cors: boolean;
 }
