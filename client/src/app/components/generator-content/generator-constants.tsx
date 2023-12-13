@@ -4,6 +4,7 @@ export const checkboxList = [
     { name: 'validation', label: 'Validation' },
     { name: 'cors', label: 'Cors' },
     { name: 'swagger', label: 'Swagger' },
+    { name: 'helmet', label: 'Helmet' },
 ];
 
 export const initFormState = {
@@ -13,4 +14,5 @@ export const initFormState = {
     validation: false,
     cors: false,
     swagger: false,
+    helmet: false,
 };
