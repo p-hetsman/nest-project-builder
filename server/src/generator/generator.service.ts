@@ -81,6 +81,7 @@ export class GeneratorService {
     const optionsToModules = {
       swagger: ['@nestjs/swagger'],
       helmet: ['helmet'],
+      postgres: ['@nestjs/typeorm', 'typeorm', 'pg'],
     };
 
     try {

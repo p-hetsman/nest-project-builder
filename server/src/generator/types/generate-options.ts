@@ -3,4 +3,7 @@ export type GenerateOptions = {
   allExceptions: boolean;
   logger: boolean;
   validation: boolean;
+  cors: boolean;
+  swagger: boolean;
+  postgres: boolean;
 };

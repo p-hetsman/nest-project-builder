@@ -24,4 +24,8 @@ export class GenerateDto {
   @IsOptional()
   @IsBoolean()
   swagger: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  postgres: boolean;
 }
