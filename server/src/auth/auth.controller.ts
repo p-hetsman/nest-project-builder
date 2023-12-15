@@ -2,39 +2,39 @@ import {
   Controller,
   Post,
   Get,
-  // HttpCode,
-  // HttpStatus,
+  HttpCode,
+  HttpStatus,
   UseGuards,
   Request,
   Req,
-  Res,
+  Body,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 
+import { LoginDto } from './dtos/login.dto';
+import { RegisterDto } from './dtos/register.dto';
 import { AuthService } from './auth.service';
-import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { GoogleAuthGuard } from './guards/google-auth.guard';
+import { FacebookAuthGuard } from './guards/facebook-auth.guard';
+import { OpenidAuthGuard } from './guards/openid-auth.guard';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  // @HttpCode(HttpStatus.OK)
-  // @Post('login')
-  // signIn(@Body() signInDto: Record<string, any>) {
-  //   return this.authService.signIn(signInDto.username, signInDto.password);
-  // }
-
-  @UseGuards(AuthGuard())
+  @HttpCode(HttpStatus.OK)
   @Post('login')
-  async login(@Request() req) {
-    return this.authService.login(req.user);
+  login(@Body() signInDto: LoginDto) {
+    return this.authService.login(signInDto.username, signInDto.password);
   }
 
-  // @Post('register')
-  // signUp(@Body() signUpDto: Record<string, any>) {
-  //   return this.authService.register(signUpDto.username, signUpDto.password);
-  // }
+  @HttpCode(HttpStatus.OK)
+  @Post('register')
+  async register(@Body() registerDto: RegisterDto) {
+    await this.authService.register(registerDto.username, registerDto.password);
+
+    return this.authService.login(registerDto.username, registerDto.password);
+  }
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
@@ -43,23 +43,41 @@ export class AuthController {
   }
 
   @Get('google')
-  @UseGuards(AuthGuard('google'))
+  @UseGuards(GoogleAuthGuard)
   async googleLogin() {
     // Initiates the Google authentication process
   }
 
   @Get('google/callback')
-  @UseGuards(AuthGuard('google'))
+  @UseGuards(GoogleAuthGuard)
   async googleLoginCallback(@Req() req) {
     // Handles the Google authentication callback
+    return this.authService.generateToken(req.user);
+  }
 
-    const { access_token } = await this.authService.login({
-      username: req.user.email,
-      _id: req.user.id,
-    });
+  @Get('facebook')
+  @UseGuards(FacebookAuthGuard)
+  async facebookLogin() {
+    // Initiates the Facebook authentication process
+  }
 
-    return {
-      access_token,
-    };
+  @Get('facebook/callback')
+  @UseGuards(FacebookAuthGuard)
+  async facebookLoginCallback(@Req() req) {
+    // Handles the Facebook authentication callback
+
+    return this.authService.generateToken(req.user);
+  }
+
+  @Get('openid')
+  @UseGuards(OpenidAuthGuard)
+  async openidLogin() {}
+
+  @Get('openid/callback')
+  @UseGuards(OpenidAuthGuard)
+  async openidLoginCallback(@Req() req) {
+    // Handles the Auth0 authentication callback
+
+    return this.authService.generateToken(req.user);
   }
 }

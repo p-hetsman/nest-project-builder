@@ -6,4 +6,8 @@ export type GenerateOptions = {
   cors: boolean;
   swagger: boolean;
   postgres: boolean;
+  authJwt: boolean;
+  authGoogle: boolean;
+  authFacebook: boolean;
+  authOpenid: boolean;
 };

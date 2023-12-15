@@ -1,5 +1,9 @@
 import { NestFactory } from '@nestjs/core';
 import { Logger<%= nestjsCommonImport %> } from '@nestjs/common';
+import * as cookieParser from 'cookie-parser';
+<%if (authOpenid) { %>
+  import * as session from 'express-session';
+<% } %>
 
 import { AppModule } from './app.module';
 
@@ -27,6 +31,18 @@ async function bootstrap() {
 <% globalOptionsConfig.forEach(globalOption => { -%>
   <%- globalOption %>
 <% }) -%>
+
+<%if (authOpenid) { %>
+  app.use(
+    session({
+      secret: '< secret >',
+      resave: false,
+      saveUninitialized: false,
+    }),
+  );
+<% } %>
+
+  app.use(cookieParser());
 
   await app.listen(PORT);
   Logger.log(`Server listening at ${PORT}`, 'main');

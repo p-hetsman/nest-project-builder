@@ -5,6 +5,10 @@ export const checkboxList = [
     { name: 'cors', label: 'Cors' },
     { name: 'swagger', label: 'Swagger' },
     { name: 'helmet', label: 'Helmet' },
+    { name: 'authJwt', label: 'Auth JWT' },
+    { name: 'authGoogle', label: 'Auth Google' },
+    { name: 'authFacebook', label: 'Auth Facebook' },
+    { name: 'authOpenid', label: 'Auth Openid' },
 ];
 
 export const initFormState = {
@@ -15,4 +19,8 @@ export const initFormState = {
     cors: false,
     swagger: false,
     helmet: false,
+    authJwt: false,
+    authGoogle: false,
+    authFacebook: false,
+    authOpenid: false,
 };

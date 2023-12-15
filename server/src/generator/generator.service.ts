@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import * as path from 'node:path';
-import { readFile, writeFile, cp } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { promisify } from 'node:util';
 import { exec } from 'node:child_process';
 import * as ejs from 'ejs';
-import { rimraf } from 'rimraf';
+import * as fs from 'fs-extra';
 
 import { GenerateOptions } from './types/generate-options';
 import {
@@ -16,6 +16,13 @@ const execPromise = promisify(exec);
 
 @Injectable()
 export class GeneratorService {
+  private templatesFolder = path.join(
+    process.cwd(),
+    'src',
+    'generator',
+    'templates',
+  );
+
   private mapOptionsToArrayOfData = <T>(
     options: GenerateOptions,
     optionsTo: Record<string, T[]>,
@@ -33,7 +40,7 @@ export class GeneratorService {
     generatedProjectFolder: string,
     projectName: string,
   ) => {
-    await rimraf(generatedProjectFolder);
+    await fs.remove(generatedProjectFolder);
 
     await execPromise(
       `nest new -s -p npm --directory ${generatedProjectFolder} ${projectName}`,
@@ -49,12 +56,34 @@ export class GeneratorService {
         'common/filters/all-exceptions.filter.ts',
         'common/types/app-request.ts',
       ],
+      authJwt: [
+        'auth/dtos/',
+        'auth/guards/jwt-auth.guard.ts',
+        'auth/strategies/jwt.strategy.ts',
+        'auth/constants.ts',
+        'auth/auth.service.ts',
+        'users/',
+        'database/',
+        'common/providers/database.providers.ts',
+      ],
+      authGoogle: [
+        'auth/guards/google-auth.guard.ts',
+        'auth/strategies/google.strategy.ts',
+      ],
+      authFacebook: [
+        'auth/guards/facebook-auth.guard.ts',
+        'auth/strategies/facebook.strategy.ts',
+      ],
+      authOpenid: [
+        'auth/guards/openid-auth.guard.ts',
+        'auth/strategies/openid.strategy.ts',
+      ],
     };
 
     return Promise.all(
       this.mapOptionsToArrayOfData(options, optionsToFiles).map((file) =>
-        cp(
-          path.join(__dirname, 'templates', file),
+        fs.copy(
+          path.join(this.templatesFolder, file),
           path.join(process.cwd(), generatedProjectFolder, 'src', file),
         ),
       ),
@@ -67,7 +96,9 @@ export class GeneratorService {
     resultFileName: string,
   ) => {
     const template = await readFile(templateFileName, { encoding: 'utf8' });
-    const content = await ejs.render(template, data, { async: true });
+    const content = await ejs.render(template, data, {
+      async: true,
+    });
 
     console.log({ template, content });
 
@@ -82,14 +113,32 @@ export class GeneratorService {
       swagger: ['@nestjs/swagger'],
       helmet: ['helmet'],
       postgres: ['@nestjs/typeorm', 'typeorm', 'pg'],
+      authJwt: [
+        'cookie-parser',
+        '@nestjs/passport',
+        '@nestjs/mongoose',
+        '@nestjs/jwt',
+        'mongoose',
+        'passport-jwt',
+        'bcrypt',
+        'class-transformer',
+        'class-validator',
+      ],
+      authGoogle: ['passport-google-oauth20'],
+      authFacebook: ['passport-facebook'],
+      authOpenid: ['openid-client'],
     };
+
+    const packages = [
+      'express-session',
+      ...this.mapOptionsToArrayOfData(options, optionsToModules),
+    ];
 
     try {
       await execPromise(
-        `cd ${generatedProjectFolder} && npm install --save ${this.mapOptionsToArrayOfData(
-          options,
-          optionsToModules,
-        ).join(' ')}`,
+        `cd ${generatedProjectFolder} && npm install --save ${packages.join(
+          ' ',
+        )}`,
       );
     } catch (e) {
       console.log(e);
@@ -156,41 +205,94 @@ export class GeneratorService {
         options,
         optionsAppConfig,
       ),
+      ...options,
     };
 
     return this.generateFile(
-      path.join(__dirname, 'templates', 'main.ts.ejs'),
+      path.join(this.templatesFolder, 'main.ts.ejs'),
       data,
       path.join(process.cwd(), generatedProjectFolder, 'src', 'main.ts'),
     );
   };
 
-  private generateAppModule = async (generatedProjectFolder: string) => {
+  private generateAppModule = async (
+    options: GenerateOptions,
+    generatedProjectFolder: string,
+  ) => {
     return this.generateFile(
-      path.join(__dirname, 'templates', 'app.module.ts.ejs'),
-      {},
+      path.join(this.templatesFolder, 'app.module.ts.ejs'),
+      options,
       path.join(process.cwd(), generatedProjectFolder, 'src', 'app.module.ts'),
     );
   };
 
+  private formatWithPrettier = async (generatedProjectFolder: string) => {
+    await execPromise(`cd ${generatedProjectFolder} && npm run format`);
+  };
+
+  private generateAuthModule = async (
+    options: GenerateOptions,
+    generatedProjectFolder: string,
+  ) => {
+    if (!options.authJwt) {
+      return;
+    }
+
+    await Promise.all([
+      this.generateFile(
+        path.join(this.templatesFolder, 'auth', 'auth.module.ts.ejs'),
+        options,
+        path.join(
+          process.cwd(),
+          generatedProjectFolder,
+          'src',
+          'auth',
+          'auth.module.ts',
+        ),
+      ),
+      this.generateFile(
+        path.join(this.templatesFolder, 'auth', 'auth.controller.ts.ejs'),
+        options,
+        path.join(
+          process.cwd(),
+          generatedProjectFolder,
+          'src',
+          'auth',
+          'auth.controller.ts',
+        ),
+      ),
+    ]);
+  };
+
   generate = async (options: GenerateOptions) => {
+    const normalizedOptions = {
+      ...options,
+      authJwt:
+        options.authJwt ||
+        options.authGoogle ||
+        options.authFacebook ||
+        options.authOpenid,
+    };
+
     const generatedProjectFolder = path.join(
       'generated-projects',
-      options.projectName,
+      normalizedOptions.projectName,
     );
 
     await this.generateDefaultProject(
       generatedProjectFolder,
-      options.projectName,
+      normalizedOptions.projectName,
     );
 
     await Promise.all([
-      await this.copyFilesToSrc(options, generatedProjectFolder),
-      await this.generateMainTs(options, generatedProjectFolder),
-      await this.addModulesInPackageJson(options, generatedProjectFolder),
-    ]);
+      this.copyFilesToSrc(normalizedOptions, generatedProjectFolder),
+      this.generateMainTs(normalizedOptions, generatedProjectFolder),
+      this.generateAppModule(normalizedOptions, generatedProjectFolder),
+      this.generateAuthModule(normalizedOptions, generatedProjectFolder),
 
-    // await this.generateAppModule(generatedProjectFolder);
+      this.addModulesInPackageJson(normalizedOptions, generatedProjectFolder),
+      this.formatWithPrettier(generatedProjectFolder),
+    ]);
 
     return;
   };
