@@ -79,6 +79,7 @@ export class GeneratorService {
         'auth/guards/openid-auth.guard.ts',
         'auth/strategies/openid.strategy.ts',
       ],
+      postgres: ['docker-compose.yml', '.env.example'],
     };
 
     return Promise.all(
