@@ -239,7 +239,7 @@ export class GeneratorService {
       ...options,
     };
     return this.generateFile(
-      path.join(__dirname, 'templates', 'app.module.ts.ejs'),
+      path.join(this.templatesFolder, 'app.module.ts.ejs'),
       data,
       path.join(process.cwd(), generatedProjectFolder, 'src', 'app.module.ts'),
     );
