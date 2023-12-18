@@ -28,4 +28,20 @@ export class GenerateDto {
   @IsOptional()
   @IsBoolean()
   postgres: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  authJwt: boolean = false;
+
+  @IsOptional()
+  @IsBoolean()
+  authGoogle: boolean = false;
+
+  @IsOptional()
+  @IsBoolean()
+  authFacebook: boolean = false;
+
+  @IsOptional()
+  @IsBoolean()
+  authOpenid: boolean = false;
 }

@@ -6,21 +6,40 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { UsersModule } from '../users/users.module';
 import { jwtConstants } from './constants';
-import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
+import { FacebookStrategy } from './strategies/facebook.strategy';
+import {
+  OpenidStrategy,
+  buildOpenIdClient,
+} from './strategies/openid.strategy';
+
+const OpenidStrategyFactory = {
+  provide: 'OpenidStrategy',
+  useFactory: async (authService: AuthService) => {
+    const client = await buildOpenIdClient();
+    return new OpenidStrategy(client, authService);
+  },
+  inject: [AuthService],
+};
 
 @Module({
   imports: [
     UsersModule,
-    PassportModule.register({ defaultStrategy: 'jwt' }),
+    PassportModule.register({ defaultStrategy: 'jwt', session: true }),
     JwtModule.register({
       secret: jwtConstants.secret,
       signOptions: { expiresIn: '300s' },
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, LocalStrategy, JwtStrategy, GoogleStrategy],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    GoogleStrategy,
+    FacebookStrategy,
+    OpenidStrategyFactory,
+  ],
   exports: [AuthService],
 })
 export class AuthModule {}
