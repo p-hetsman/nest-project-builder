@@ -1,18 +1,20 @@
-import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
+import { Module} from '@nestjs/common';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
+<% imports.forEach(imports => { -%>
+  <%- imports %>
+  <% }) -%>
 
 
 @Module({
-  imports: [],
+  imports: [
+  <% moduleImports.forEach(moduleImports => { -%>
+    <%- moduleImports %>
+    <% }) -%>
+    ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(RequestIdMiddleware).forRoutes('*');
-    consumer.apply(LogRequestMiddleware).forRoutes('*');
-  }
-}
+export class AppModule {}

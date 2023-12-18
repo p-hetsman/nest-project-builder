@@ -9,6 +9,7 @@ import { rimraf } from 'rimraf';
 import { GenerateOptions } from './types/generate-options';
 import {
   generateCorsConfigOptions,
+  generatePostgresConfigOptions,
   generateSwaggerConfigOptions,
 } from './constants';
 
@@ -81,7 +82,7 @@ export class GeneratorService {
     const optionsToModules = {
       swagger: ['@nestjs/swagger'],
       helmet: ['helmet'],
-      postgres: ['@nestjs/typeorm', 'typeorm', 'pg'],
+      postgres: ['@nestjs/typeorm', 'typeorm', 'pg', 'dotenv'],
     };
 
     try {
@@ -119,7 +120,7 @@ export class GeneratorService {
     };
 
     const optionsAppConfig = {
-      cors: [await generateCorsConfigOptions()],
+      cors: [generateCorsConfigOptions()],
       swagger: [await generateSwaggerConfigOptions()],
       helmet: ['app.use(helmet());'],
     };
@@ -165,10 +166,29 @@ export class GeneratorService {
     );
   };
 
-  private generateAppModule = async (generatedProjectFolder: string) => {
+  private generateAppModule = async (
+    options: GenerateOptions,
+    generatedProjectFolder: string,
+  ) => {
+    const optionsToImports = {
+      postgres: [
+        `import { TypeOrmModule } from '@nestjs/typeorm';`,
+        `import 'dotenv/config';`,
+      ],
+    };
+    const optionsToModuleImports = {
+      postgres: [generatePostgresConfigOptions()],
+    };
+    const data = {
+      imports: this.mapOptionsToArrayOfData(options, optionsToImports),
+      moduleImports: this.mapOptionsToArrayOfData(
+        options,
+        optionsToModuleImports,
+      ),
+    };
     return this.generateFile(
       path.join(__dirname, 'templates', 'app.module.ts.ejs'),
-      {},
+      data,
       path.join(process.cwd(), generatedProjectFolder, 'src', 'app.module.ts'),
     );
   };
@@ -190,7 +210,7 @@ export class GeneratorService {
       await this.addModulesInPackageJson(options, generatedProjectFolder),
     ]);
 
-    // await this.generateAppModule(generatedProjectFolder);
+    await this.generateAppModule(options, generatedProjectFolder);
 
     return;
   };

@@ -17,7 +17,10 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "run docker ": "docker-compose up -d",
+    "docker containers": "docker ps",
+    "stop docker ": "docker-compose down -v"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
@@ -28,6 +31,7 @@
     "@nestjs/platform-express": "^10.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
+    "dotenv": "^16.3.1",
     "ejs": "^3.1.9",
     "mongoose": "^8.0.1",
     "passport": "^0.6.0",
