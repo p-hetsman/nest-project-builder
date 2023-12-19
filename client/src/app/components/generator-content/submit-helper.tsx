@@ -1,10 +1,6 @@
-import { isValidProjectName } from './validtion-helper';
+import { isValidProjectName } from './validation-helper';
+import axios from 'axios';
 
-//submission emulator
-/* const mockFetch = async () => ({
-    ok: false/true,
-});
- */
 export const handleSubmit = async (event, formData) => {
     event.preventDefault();
     const { projectName } = formData;
@@ -14,19 +10,12 @@ export const handleSubmit = async (event, formData) => {
     }
 
     try {
-        const response = await fetch(
+        const response = await axios.post(
             process.env.GENERATOR_URL ?? 'url_var_error',
-            {
-                method: 'Post',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData),
-            },
+            formData,
         );
-        //  const response = await mockFetch();
 
-        if (response.ok) {
+        if (response.statusText) {
             return await { text: 'Form submitted successfully!' };
         }
 

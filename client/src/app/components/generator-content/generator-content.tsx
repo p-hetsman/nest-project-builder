@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button, Checkbox, Input } from '@nextui-org/react';
 
-import { isValidProjectName } from './validtion-helper';
+import { isValidProjectName } from './validation-helper';
 import { checkboxList, initFormState } from './generator-constants';
 import ModalPopUp from './modal-popup/modal-popup';
 import { handleSubmit } from './submit-helper';
