@@ -9,6 +9,7 @@ import * as fs from 'fs-extra';
 import { GenerateOptions } from './types/generate-options';
 import {
   generateCorsConfigOptions,
+  generatePostgresConfigOptions,
   generateSwaggerConfigOptions,
 } from './constants';
 
@@ -78,6 +79,7 @@ export class GeneratorService {
         'auth/guards/openid-auth.guard.ts',
         'auth/strategies/openid.strategy.ts',
       ],
+      postgres: ['docker-compose.yml', '.env.example'],
     };
 
     return Promise.all(
@@ -112,7 +114,7 @@ export class GeneratorService {
     const optionsToModules = {
       swagger: ['@nestjs/swagger'],
       helmet: ['helmet'],
-      postgres: ['@nestjs/typeorm', 'typeorm', 'pg'],
+      postgres: ['@nestjs/typeorm', 'typeorm', 'pg', 'dotenv'],
       authJwt: [
         'cookie-parser',
         '@nestjs/passport',
@@ -173,7 +175,7 @@ export class GeneratorService {
     };
 
     const optionsAppConfig = {
-      cors: [await generateCorsConfigOptions()],
+      cors: [generateCorsConfigOptions()],
       swagger: [await generateSwaggerConfigOptions()],
       helmet: ['app.use(helmet());'],
     };
@@ -224,9 +226,26 @@ export class GeneratorService {
     options: GenerateOptions,
     generatedProjectFolder: string,
   ) => {
+    const optionsToImports = {
+      postgres: [
+        `import { TypeOrmModule } from '@nestjs/typeorm';`,
+        `import 'dotenv/config';`,
+      ],
+    };
+    const optionsToModuleImports = {
+      postgres: [generatePostgresConfigOptions()],
+    };
+    const data = {
+      imports: this.mapOptionsToArrayOfData(options, optionsToImports),
+      moduleImports: this.mapOptionsToArrayOfData(
+        options,
+        optionsToModuleImports,
+      ),
+      ...options,
+    };
     return this.generateFile(
       path.join(this.templatesFolder, 'app.module.ts.ejs'),
-      options,
+      data,
       path.join(process.cwd(), generatedProjectFolder, 'src', 'app.module.ts'),
     );
   };

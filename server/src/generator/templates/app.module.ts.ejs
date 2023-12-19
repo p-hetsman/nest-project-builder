@@ -9,12 +9,22 @@ import { AppService } from './app.service';
   import { DatabaseModule } from './database/database.module';
 <% } %>
 
+
+<% imports.forEach(imports => { -%>
+  <%- imports %>
+  <% }) -%>
+
+
 @Module({
   imports: [
   <%if (authGoogle) { %>
     UsersModule, AuthModule, DatabaseModule
   <% } %>
-  ],
+  
+  <% moduleImports.forEach(moduleImports => { -%>
+    <%- moduleImports %>
+    <% }) -%>
+    ],
   controllers: [AppController],
   providers: [AppService],
 })

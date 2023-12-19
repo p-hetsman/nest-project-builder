@@ -1,4 +1,5 @@
-import { getProjectPackageJson } from '../generator.helpers';
+import { getProjectFileData } from '../generator.helpers';
+import 'dotenv/config';
 
 const corsOptions = `
     //origin: You can specify a specific origin (e.g., 'http://example.com'),
@@ -13,7 +14,7 @@ const corsOptions = `
     optionsSuccessStatus: 204, //Set the HTTP status code to be returned for successful preflight requests. The default value is 204 (No Content).`;
 
 export async function generateSwaggerConfigOptions() {
-  const dataPackageJson = await getProjectPackageJson();
+  const dataPackageJson = await getProjectFileData('package.json');
   return await `
   const config = new DocumentBuilder()
     .setTitle('${dataPackageJson['name']}')
@@ -24,7 +25,21 @@ export async function generateSwaggerConfigOptions() {
   SwaggerModule.setup('api', app, document);`;
 }
 
-export async function generateCorsConfigOptions() {
-  return await `app.enableCors({${corsOptions}
+export function generateCorsConfigOptions() {
+  return `app.enableCors({${corsOptions}
   });`;
+}
+
+export function generatePostgresConfigOptions() {
+  return ` 
+  TypeOrmModule.forRoot({
+  "type": "postgres",
+  "host": "localhost",
+  "port": ${process.env.PG_PORT},
+  "username": "${process.env.POSTGRES_USER}",
+  "password": "${process.env.POSTGRES_PASSWORD}",
+  "database": "${process.env.POSTGRES_DB_NAME}",
+  "entities": ["dist/**/*.entity{.ts,.js}"],
+  "synchronize": process.env.NODE_ENV === 'production',
+  }),`;
 }
