@@ -145,6 +145,11 @@ export class GeneratorService {
     }
   };
 
+  // user of the generated project should run npm install
+  private deleteNodeModules = async (generatedProjectFolder: string) => {
+    await fs.remove(path.join(generatedProjectFolder, 'node_modules'));
+  };
+
   private generateMainTs = async (
     options: GenerateOptions,
     generatedProjectFolder: string,
@@ -293,6 +298,8 @@ export class GeneratorService {
       this.addModulesInPackageJson(normalizedOptions, generatedProjectFolder),
       this.formatWithPrettier(generatedProjectFolder),
     ]);
+
+    await this.deleteNodeModules(generatedProjectFolder);
 
     return;
   };
