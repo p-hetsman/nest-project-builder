@@ -19,6 +19,7 @@ export default function SubmitForm() {
     const [submissionText, setSubmissionText] = useState('');
     const [isOpen, setIsOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [isTouched, setIsTouched] = useState(false);
 
     const { projectName } = formData;
 
@@ -34,6 +35,7 @@ export default function SubmitForm() {
                 setIsLoading(false);
                 setSubmissionText(item?.text);
                 handleOpenModal();
+                setIsTouched(false);
             }
         });
 
@@ -71,6 +73,10 @@ export default function SubmitForm() {
             [name]: newValue,
         }));
     };
+    const handleBlur = () => {
+        setIsTouched(true);
+    };
+    const isInvalid = !isValidProjectName(projectName) && isTouched;
 
     return (
         <div>
@@ -79,16 +85,18 @@ export default function SubmitForm() {
                 <Input
                     autoComplete="off"
                     color={
-                        !isValidProjectName(projectName) ? 'danger' : 'success'
+                        !isValidProjectName(projectName) && isTouched
+                            ? 'danger'
+                            : 'success'
                     }
                     errorMessage={
-                        !isValidProjectName(projectName) &&
-                        'Please enter a valid project name'
+                        isInvalid && 'Please enter a valid project name'
                     }
-                    isInvalid={!isValidProjectName(projectName)}
+                    isInvalid={isInvalid}
                     label="Project Name:"
                     name="projectName"
-                    onChange={e => handleChange(e)}
+                    onBlur={handleBlur}
+                    onChange={handleChange}
                     placeholder="Enter your project name"
                     type="text"
                     value={projectName}
