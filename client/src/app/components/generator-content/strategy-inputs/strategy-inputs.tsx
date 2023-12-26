@@ -34,7 +34,11 @@ function StrategyInputs({
         ));
     };
 
-    return <div style={{ display: 'flex' }}>{renderInputs(strategyName)}</div>;
+    return (
+        <div style={{ display: 'flex', gap: '2rem' }}>
+            {renderInputs(strategyName)}
+        </div>
+    );
 }
 
 export default StrategyInputs;
