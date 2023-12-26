@@ -10,6 +10,7 @@ import {
 import ModalPopUp from './modal-popup/modal-popup';
 import { handleSubmit } from './submit-helper';
 import SpinnerOverlay from './spinner-overlay';
+import StrategyInputs from './strategy-inputs/strategy-inputs';
 
 export default function SubmitForm() {
     const [formData, setFormData] = useState({ ...initFormState });
@@ -26,12 +27,12 @@ export default function SubmitForm() {
     const [isTouched, setIsTouched] = useState(false);
     const [strategiesFormData, setStrategiesFormData] =
         useState(initStrategiesState);
+
     const { projectName } = formData;
 
     const handleOpenModal = () => {
         setIsOpen(true);
     };
-
     const submission = e => {
         const submissionResult = handleSubmit(e, formData);
         setIsLoading(true);
@@ -99,26 +100,13 @@ export default function SubmitForm() {
         }));
     };
 
-    const renderInputs = strategy => {
-        return Object.keys(strategiesFormData[strategy]).map((field, index) => (
-            <input
-                key={index}
-                onChange={e =>
-                    handleStrategiesInputChange(strategy, field, e.target.value)
-                }
-                placeholder={field}
-                type="text"
-                value={strategiesFormData[strategy][field]}
-            />
-        ));
-    };
     const resetFormData = label => {
         const initialData = initStrategiesState;
         const strategyName = label + 'Strategy';
 
         setStrategiesFormData(prevData => ({
             ...prevData,
-            [strategyName]: { ...initialData.authGoogleStrategy },
+            [strategyName]: { ...initialData[strategyName] },
         }));
     };
     return (
@@ -160,7 +148,13 @@ export default function SubmitForm() {
                             {item.label}
                         </Checkbox>
                         {checkboxStates[item.name] && item.strategy?.name && (
-                            <div>{renderInputs(item.strategy?.name)}</div>
+                            <StrategyInputs
+                                handleStrategiesInputChange={
+                                    handleStrategiesInputChange
+                                }
+                                strategiesFormData={strategiesFormData}
+                                strategyName={item.strategy?.name}
+                            />
                         )}
                     </div>
                 ))}

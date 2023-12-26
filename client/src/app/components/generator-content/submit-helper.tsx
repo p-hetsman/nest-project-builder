@@ -38,7 +38,7 @@ export const mapAuthTypeToKey = (authType: AuthTypes): string => {
 };
 export const mapAuthTypeToStrategyName = (
     authType: AuthTypes,
-): StrategyNames | undefined => {
+): StrategyNames | '' => {
     switch (authType) {
         case AuthTypes.google:
             return StrategyNames.authGoogleStrategy;
@@ -47,14 +47,17 @@ export const mapAuthTypeToStrategyName = (
         case AuthTypes.openid:
             return StrategyNames.authOpenidStrategy;
         default:
-            return undefined;
+            return '';
     }
 };
 
 export const generateAuthObjects = (): {
     name: string;
     label: string;
-    strategy: { name: string; value: any };
+    strategy: {
+        name: StrategyNames | string;
+        value: string[];
+    };
 }[] => {
     const authObjects = Object.keys(AuthTypes).map(key => {
         const authType = AuthTypes[key as keyof typeof AuthTypes];

@@ -22,7 +22,12 @@ export const enum StrategyNames {
 
 const generatedAuthObjects = generateAuthObjects();
 
-export const checkboxList = [
+export interface checkboxListType {
+    name: string;
+    label: string;
+    strategy?: { name: string; value: unknown[] };
+}
+export const checkboxList: checkboxListType[] = [
     { name: 'allExceptions', label: 'All Exceptions' },
     { name: 'logger', label: 'Logger' },
     { name: 'validation', label: 'Validation' },
