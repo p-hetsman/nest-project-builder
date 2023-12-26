@@ -2,13 +2,17 @@ import { useState } from 'react';
 import { Button, Checkbox, Input } from '@nextui-org/react';
 
 import { isValidProjectName } from './validation-helper';
-import { checkboxList, initFormState } from './generator-constants';
+import {
+    checkboxList,
+    initFormState,
+    initStrategiesState,
+} from './generator-constants';
 import ModalPopUp from './modal-popup/modal-popup';
 import { handleSubmit } from './submit-helper';
 import SpinnerOverlay from './spinner-overlay';
 
 export default function SubmitForm() {
-    const [formData, setFormData] = useState(initFormState);
+    const [formData, setFormData] = useState({ ...initFormState });
     const [isButtonDisabled, setButtonDisabled] = useState(false);
     const [checkboxStates, setCheckboxStates] = useState(
         checkboxList.reduce(
@@ -20,7 +24,8 @@ export default function SubmitForm() {
     const [isOpen, setIsOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [isTouched, setIsTouched] = useState(false);
-
+    const [strategiesFormData, setStrategiesFormData] =
+        useState(initStrategiesState);
     const { projectName } = formData;
 
     const handleOpenModal = () => {
@@ -57,6 +62,12 @@ export default function SubmitForm() {
 
         const { name, value, type, checked } = event.target;
         const newValue = type === 'checkbox' ? checked : value;
+
+        // Reset data if checkbox is deselected
+        if (!checked) {
+            resetFormData(name);
+        }
+
         setCheckboxStates(prevState => ({
             ...prevState,
             [name]: checked,
@@ -78,6 +89,38 @@ export default function SubmitForm() {
     };
     const isInvalid = !isValidProjectName(projectName) && isTouched;
 
+    const handleStrategiesInputChange = (strategy, field, value) => {
+        setStrategiesFormData(prevFormData => ({
+            ...prevFormData,
+            [strategy]: {
+                ...prevFormData[strategy],
+                [field]: value,
+            },
+        }));
+    };
+
+    const renderInputs = strategy => {
+        return Object.keys(strategiesFormData[strategy]).map((field, index) => (
+            <input
+                key={index}
+                onChange={e =>
+                    handleStrategiesInputChange(strategy, field, e.target.value)
+                }
+                placeholder={field}
+                type="text"
+                value={strategiesFormData[strategy][field]}
+            />
+        ));
+    };
+    const resetFormData = label => {
+        const initialData = initStrategiesState;
+        const strategyName = label + 'Strategy';
+
+        setStrategiesFormData(prevData => ({
+            ...prevData,
+            [strategyName]: { ...initialData.authGoogleStrategy },
+        }));
+    };
     return (
         <div>
             {isLoading && <SpinnerOverlay />}
@@ -116,6 +159,9 @@ export default function SubmitForm() {
                         >
                             {item.label}
                         </Checkbox>
+                        {checkboxStates[item.name] && item.strategy?.name && (
+                            <div>{renderInputs(item.strategy?.name)}</div>
+                        )}
                     </div>
                 ))}
 

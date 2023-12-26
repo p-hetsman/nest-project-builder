@@ -1,3 +1,27 @@
+import { generateAuthObjects, getStrategiesFormData } from './submit-helper';
+
+export const commonStrategy = ['clientID', 'clientSecret', 'callbackURL'];
+export const OpenidStrategy = [
+    'clientID',
+    'clientSecret',
+    'callbackURL',
+    'trustIssuer',
+];
+
+export enum AuthTypes {
+    google = 'Google',
+    facebook = 'Facebook',
+    openid = 'Openid',
+}
+
+export const enum StrategyNames {
+    authGoogleStrategy = 'authGoogleStrategy',
+    authFacebookStrategy = 'authFacebookStrategy',
+    authOpenidStrategy = 'authOpenidStrategy',
+}
+
+const generatedAuthObjects = generateAuthObjects();
+
 export const checkboxList = [
     { name: 'allExceptions', label: 'All Exceptions' },
     { name: 'logger', label: 'Logger' },
@@ -6,9 +30,7 @@ export const checkboxList = [
     { name: 'swagger', label: 'Swagger' },
     { name: 'helmet', label: 'Helmet' },
     { name: 'authJwt', label: 'Auth JWT' },
-    { name: 'authGoogle', label: 'Auth Google' },
-    { name: 'authFacebook', label: 'Auth Facebook' },
-    { name: 'authOpenid', label: 'Auth Openid' },
+    ...generatedAuthObjects,
 ];
 
 export const initFormState = {
@@ -23,4 +45,8 @@ export const initFormState = {
     authGoogle: false,
     authFacebook: false,
     authOpenid: false,
+};
+
+export const initStrategiesState = {
+    ...getStrategiesFormData(checkboxList),
 };
