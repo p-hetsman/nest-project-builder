@@ -55,3 +55,7 @@ export const initFormState = {
 export const initStrategiesState = {
     ...getStrategiesFormData(checkboxList),
 };
+
+export const initStrategiesBooleanState = {
+    ...getStrategiesFormData(checkboxList, true),
+};

@@ -1,28 +1,34 @@
 import { Input } from '@nextui-org/react';
 import React from 'react';
 
-const isValidURL = url => {
-    const urlPattern = new RegExp(
-        '(https://www.|http://www.|https://|http://)?[a-zA-Z]{2,}(.[a-zA-Z]{2,})(.[a-zA-Z]{2,})?/[a-zA-Z0-9]{2,}|((https://www.|http://www.|https://|http://)?[a-zA-Z]{2,}(.[a-zA-Z]{2,})(.[a-zA-Z]{2,})?)|(https://www.|http://www.|https://|http://)?[a-zA-Z0-9]{2,}.[a-zA-Z0-9]{2,}.[a-zA-Z0-9]{2,}(.[a-zA-Z0-9]{2,})? ',
-    );
-    return urlPattern.test(url);
-};
 function StrategyInputs({
     strategyName,
     strategiesFormData,
     handleStrategiesInputChange,
+    validity,
+    handleInputsBlur,
+    touchedFields,
 }) {
-    const renderInputs = strategy => {
+    const RenderInputs = strategy => {
         return Object.keys(strategiesFormData[strategy]).map((field, index) => (
             <Input
                 autoComplete="off"
+                color={
+                    !validity?.[strategy]?.[field] &&
+                    touchedFields?.[strategy]?.[field]
+                        ? 'danger'
+                        : 'success'
+                }
                 errorMessage={
-                    field === 'callbackURL' &&
-                    !isValidURL(strategiesFormData[strategy][field])
-                        ? 'Invalid URL'
+                    !validity?.[strategy]?.[field] &&
+                    touchedFields?.[strategy]?.[field]
+                        ? `Invalid ${field}`
                         : ''
                 }
                 key={index}
+                onBlur={() => {
+                    handleInputsBlur(strategy, field);
+                }}
                 onChange={e =>
                     handleStrategiesInputChange(strategy, field, e.target.value)
                 }
@@ -36,7 +42,7 @@ function StrategyInputs({
 
     return (
         <div style={{ display: 'flex', gap: '2rem' }}>
-            {renderInputs(strategyName)}
+            {RenderInputs(strategyName)}
         </div>
     );
 }

@@ -5,14 +5,20 @@ import { isValidProjectName } from './validation-helper';
 import {
     checkboxList,
     initFormState,
+    initStrategiesBooleanState,
     initStrategiesState,
 } from './generator-constants';
 import ModalPopUp from './modal-popup/modal-popup';
-import { handleSubmit } from './submit-helper';
+import { handleSubmit, isValidURL } from './submit-helper';
 import SpinnerOverlay from './spinner-overlay';
 import StrategyInputs from './strategy-inputs/strategy-inputs';
 
+/**
+ * Renders a form with input fields, checkboxes, and a submit button.
+ * Handles form submission, input changes, and validation.
+ */
 export default function SubmitForm() {
+    // Initialize form state
     const [formData, setFormData] = useState({ ...initFormState });
     const [isButtonDisabled, setButtonDisabled] = useState(false);
     const [checkboxStates, setCheckboxStates] = useState(
@@ -27,12 +33,24 @@ export default function SubmitForm() {
     const [isTouched, setIsTouched] = useState(false);
     const [strategiesFormData, setStrategiesFormData] =
         useState(initStrategiesState);
+    const [validity, setValidity] = useState(initStrategiesBooleanState);
+    const [touchedFields, setTouchedFields] = useState(
+        initStrategiesBooleanState,
+    );
 
     const { projectName } = formData;
 
+    /**
+     * Opens the modal
+     */
     const handleOpenModal = () => {
         setIsOpen(true);
     };
+
+    /**
+     * Handles form submission
+     * @param {Event} e - The form submission event
+     */
     const submission = e => {
         const submissionResult = handleSubmit(e, formData);
         setIsLoading(true);
@@ -45,6 +63,7 @@ export default function SubmitForm() {
             }
         });
 
+        // Reset form data and checkbox states
         setFormData(initFormState);
         setCheckboxStates(
             checkboxList.reduce(
@@ -54,6 +73,10 @@ export default function SubmitForm() {
         );
     };
 
+    /**
+     * Handles input "projectName" changes
+     * @param {Event} event - The input change event
+     */
     const handleChange = event => {
         setButtonDisabled(true);
 
@@ -64,7 +87,6 @@ export default function SubmitForm() {
         const { name, value, type, checked } = event.target;
         const newValue = type === 'checkbox' ? checked : value;
 
-        // Reset data if checkbox is deselected
         if (!checked) {
             resetFormData(name);
         }
@@ -85,12 +107,62 @@ export default function SubmitForm() {
             [name]: newValue,
         }));
     };
+
+    /**
+     * Handles input "projectName" blur event
+     */
     const handleBlur = () => {
         setIsTouched(true);
     };
+
+    // Check if project name is invalid and has been touched
     const isInvalid = !isValidProjectName(projectName) && isTouched;
 
+    /**
+     * Handles strategy input blur event
+     * @param {string} strategy - The strategy name
+     * @param {string} field - The field name
+     */
+    const handleInputsBlur = (strategy, field) => {
+        setTouchedFields(touchedFields => ({
+            ...touchedFields,
+            [strategy]: {
+                ...touchedFields[strategy],
+                [field]: true,
+            },
+        }));
+    };
+
+    /**
+     * Handles the input change for strategies.
+     *
+     * @param {string} strategy - The strategy name.
+     * @param {string} field - The field being modified.
+     * @param {string} value - The new value.
+     */
     const handleStrategiesInputChange = (strategy, field, value) => {
+        let isValidState = false;
+
+        // Check if the field is 'callbackURL' and the value is a valid URL.
+        if (field === 'callbackURL') {
+            if (isValidURL(value)) {
+                isValidState = true;
+            }
+        } else if (value.length > 0) {
+            // If the value is not empty, consider it valid.
+            isValidState = true;
+        }
+
+        // Update the validity state.
+        setValidity(prevValidity => ({
+            ...prevValidity,
+            [strategy]: {
+                ...prevValidity[strategy],
+                [field]: isValidState,
+            },
+        }));
+
+        // Update the form data.
         setStrategiesFormData(prevFormData => ({
             ...prevFormData,
             [strategy]: {
@@ -101,12 +173,19 @@ export default function SubmitForm() {
     };
 
     const resetFormData = label => {
-        const initialData = initStrategiesState;
         const strategyName = label + 'Strategy';
 
         setStrategiesFormData(prevData => ({
             ...prevData,
-            [strategyName]: { ...initialData[strategyName] },
+            [strategyName]: { ...initStrategiesState[strategyName] },
+        }));
+        setValidity(prevData => ({
+            ...prevData,
+            [strategyName]: { ...initStrategiesBooleanState[strategyName] },
+        }));
+        setTouchedFields(prevData => ({
+            ...prevData,
+            [strategyName]: { ...initStrategiesBooleanState[strategyName] },
         }));
     };
     return (
@@ -147,13 +226,17 @@ export default function SubmitForm() {
                         >
                             {item.label}
                         </Checkbox>
+
                         {checkboxStates[item.name] && item.strategy?.name && (
                             <StrategyInputs
+                                handleInputsBlur={handleInputsBlur}
                                 handleStrategiesInputChange={
                                     handleStrategiesInputChange
                                 }
                                 strategiesFormData={strategiesFormData}
                                 strategyName={item.strategy?.name}
+                                touchedFields={touchedFields}
+                                validity={validity}
                             />
                         )}
                     </div>
