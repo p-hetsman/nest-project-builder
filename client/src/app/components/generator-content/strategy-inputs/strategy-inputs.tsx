@@ -10,56 +10,52 @@ function StrategyInputs({
     touchedFields,
     setHasError,
 }) {
+    useEffect(() => {
+        const hasInputError = Object.keys(
+            strategiesFormData[strategyName],
+        ).some(
+            field =>
+                !validity?.[strategyName]?.[field] &&
+                touchedFields?.[strategyName]?.[field],
+        );
+
+        setHasError(hasInputError);
+    }, [
+        strategyName,
+        validity,
+        touchedFields,
+        strategiesFormData,
+        setHasError,
+    ]);
+
     const RenderInputs = strategy => {
-        useEffect(() => {
-            const hasInputError = Object.keys(
-                strategiesFormData[strategyName],
-            ).some(
-                field =>
-                    !validity?.[strategyName]?.[field] &&
-                    touchedFields?.[strategyName]?.[field],
+        return Object.keys(strategiesFormData[strategy]).map((field, index) => {
+            const isFieldInvalid =
+                !validity?.[strategy]?.[field] &&
+                touchedFields?.[strategy]?.[field];
+            const errorMessage = isFieldInvalid ? `Invalid ${field}` : '';
+
+            return (
+                <Input
+                    autoComplete="off"
+                    color={isFieldInvalid ? 'danger' : 'success'}
+                    errorMessage={errorMessage}
+                    key={index}
+                    onBlur={() => handleInputsBlur(strategy, field)}
+                    onChange={e =>
+                        handleStrategiesInputChange(
+                            strategy,
+                            field,
+                            e.target.value,
+                        )
+                    }
+                    placeholder={field}
+                    type="text"
+                    value={strategiesFormData[strategy][field]}
+                    variant="bordered"
+                />
             );
-            const hasEmptyField = Object.keys(
-                strategiesFormData[strategyName],
-            ).some(
-                field => strategiesFormData[strategyName][field].trim() === '',
-            );
-            setHasError(hasInputError || (hasEmptyField && !hasInputError));
-        }, [
-            strategyName,
-            validity,
-            touchedFields,
-            strategiesFormData,
-            setHasError,
-        ]);
-        return Object.keys(strategiesFormData[strategy]).map((field, index) => (
-            <Input
-                autoComplete="off"
-                color={
-                    !validity?.[strategy]?.[field] &&
-                    touchedFields?.[strategy]?.[field]
-                        ? 'danger'
-                        : 'success'
-                }
-                errorMessage={
-                    !validity?.[strategy]?.[field] &&
-                    touchedFields?.[strategy]?.[field]
-                        ? `Invalid ${field}`
-                        : ''
-                }
-                key={index}
-                onBlur={() => {
-                    handleInputsBlur(strategy, field);
-                }}
-                onChange={e =>
-                    handleStrategiesInputChange(strategy, field, e.target.value)
-                }
-                placeholder={field}
-                type="text"
-                value={strategiesFormData[strategy][field]}
-                variant="bordered"
-            />
-        ));
+        });
     };
 
     return (

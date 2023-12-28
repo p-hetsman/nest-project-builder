@@ -46,11 +46,25 @@ export default function SubmitForm() {
     const isInvalid = !isValidProjectName(projectName) && isTouched;
     // Update the button state based on error status
     useEffect(() => {
-        setButtonDisabled(isValidProjectName(projectName) && !hasError);
-    }, [hasError, projectName]);
-    /**
-     * Opens the modal
-     */
+        let shouldDisableButton = false;
+
+        checkboxList.forEach(item => {
+            if (checkboxStates[item.name] && item.strategy?.name) {
+                const strategyName = item.strategy?.name;
+                const emptyInputs = Object.values(
+                    strategiesFormData[strategyName],
+                ).some((value: string) => value.trim() === '');
+                if (emptyInputs || hasError) {
+                    shouldDisableButton = true;
+                }
+            }
+        });
+
+        const showButton =
+            isValidProjectName(projectName) && !shouldDisableButton;
+        setButtonDisabled(showButton);
+    }, [checkboxStates, touchedFields, projectName, hasError]);
+
     const openModal = () => {
         setIsOpen(true);
     };
