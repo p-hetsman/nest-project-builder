@@ -19,7 +19,12 @@ function StrategyInputs({
                     !validity?.[strategyName]?.[field] &&
                     touchedFields?.[strategyName]?.[field],
             );
-            setHasError(hasInputError);
+            const hasEmptyField = Object.keys(
+                strategiesFormData[strategyName],
+            ).some(
+                field => strategiesFormData[strategyName][field].trim() === '',
+            );
+            setHasError(hasInputError || (hasEmptyField && !hasInputError));
         }, [
             strategyName,
             validity,

@@ -41,10 +41,13 @@ export default function SubmitForm() {
     const [hasError, setHasError] = useState(false);
 
     const { projectName } = formData;
+
+    // Check if project name is invalid and has been touched
+    const isInvalid = !isValidProjectName(projectName) && isTouched;
     // Update the button state based on error status
     useEffect(() => {
-        setButtonDisabled(!hasError && !isInvalid);
-    }, [hasError]);
+        setButtonDisabled(isValidProjectName(projectName) && !hasError);
+    }, [hasError, projectName]);
     /**
      * Opens the modal
      */
@@ -82,12 +85,6 @@ export default function SubmitForm() {
      * @param {Event} event - The input change event
      */
     const handleChange = event => {
-        setButtonDisabled(true);
-
-        if (!isValidProjectName(projectName)) {
-            setButtonDisabled(false);
-        }
-
         const { name, value, type, checked } = event.target;
         const newValue = type === 'checkbox' ? checked : value;
 
@@ -118,9 +115,6 @@ export default function SubmitForm() {
     const handleBlur = () => {
         setIsTouched(true);
     };
-
-    // Check if project name is invalid and has been touched
-    const isInvalid = !isValidProjectName(projectName) && isTouched;
 
     /**
      * Handles strategy input blur event
