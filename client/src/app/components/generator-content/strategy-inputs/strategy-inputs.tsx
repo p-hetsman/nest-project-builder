@@ -1,5 +1,5 @@
 import { Input } from '@nextui-org/react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 
 function StrategyInputs({
     strategyName,
@@ -11,9 +11,6 @@ function StrategyInputs({
     setHasError,
 }) {
     const RenderInputs = strategy => {
-        const [, setLocalError] = useState(true); // Local state to track error within the component
-
-        // Update local error state based on input validity
         useEffect(() => {
             const hasInputError = Object.keys(
                 strategiesFormData[strategyName],
@@ -22,8 +19,7 @@ function StrategyInputs({
                     !validity?.[strategyName]?.[field] &&
                     touchedFields?.[strategyName]?.[field],
             );
-            setLocalError(hasInputError);
-            setHasError(hasInputError); // Update parent's error state
+            setHasError(hasInputError);
         }, [
             strategyName,
             validity,
