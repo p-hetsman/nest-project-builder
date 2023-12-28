@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, Checkbox, Input } from '@nextui-org/react';
 
 import { isValidProjectName } from './validation-helper';
@@ -38,15 +38,19 @@ export default function SubmitForm() {
         initStrategiesBooleanState,
     );
 
-    const { projectName } = formData;
+    const [hasError, setHasError] = useState(false);
 
+    const { projectName } = formData;
+    // Update the button state based on error status
+    useEffect(() => {
+        setButtonDisabled(!hasError && !isInvalid);
+    }, [hasError]);
     /**
      * Opens the modal
      */
-    const handleOpenModal = () => {
+    const openModal = () => {
         setIsOpen(true);
     };
-
     /**
      * Handles form submission
      * @param {Event} e - The form submission event
@@ -58,7 +62,7 @@ export default function SubmitForm() {
             if (item) {
                 setIsLoading(false);
                 setSubmissionText(item?.text);
-                handleOpenModal();
+                openModal();
                 setIsTouched(false);
             }
         });
@@ -143,17 +147,12 @@ export default function SubmitForm() {
     const handleStrategiesInputChange = (strategy, field, value) => {
         let isValidState = false;
 
-        // Check if the field is 'callbackURL' and the value is a valid URL.
-        if (field === 'callbackURL') {
-            if (isValidURL(value)) {
-                isValidState = true;
-            }
+        if (field === 'callbackURL' && isValidURL(value)) {
+            isValidState = true;
         } else if (value.length > 0) {
-            // If the value is not empty, consider it valid.
             isValidState = true;
         }
 
-        // Update the validity state.
         setValidity(prevValidity => ({
             ...prevValidity,
             [strategy]: {
@@ -162,7 +161,6 @@ export default function SubmitForm() {
             },
         }));
 
-        // Update the form data.
         setStrategiesFormData(prevFormData => ({
             ...prevFormData,
             [strategy]: {
@@ -233,6 +231,7 @@ export default function SubmitForm() {
                                 handleStrategiesInputChange={
                                     handleStrategiesInputChange
                                 }
+                                setHasError={setHasError}
                                 strategiesFormData={strategiesFormData}
                                 strategyName={item.strategy?.name}
                                 touchedFields={touchedFields}
