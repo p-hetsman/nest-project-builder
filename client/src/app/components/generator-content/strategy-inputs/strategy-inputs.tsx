@@ -36,24 +36,27 @@ function StrategyInputs({
             const errorMessage = isFieldInvalid ? `Invalid ${field}` : '';
 
             return (
-                <Input
-                    autoComplete="off"
-                    color={isFieldInvalid ? 'danger' : 'success'}
-                    errorMessage={errorMessage}
-                    key={index}
-                    onBlur={() => handleInputsBlur(strategy, field)}
-                    onChange={e =>
-                        handleStrategiesInputChange(
-                            strategy,
-                            field,
-                            e.target.value,
-                        )
-                    }
-                    placeholder={field}
-                    type="text"
-                    value={strategiesFormData[strategy][field]}
-                    variant="bordered"
-                />
+                <div key={index}>
+                    <div>{field} :</div>
+                    <Input
+                        autoComplete="off"
+                        color={isFieldInvalid ? 'danger' : 'success'}
+                        errorMessage={errorMessage}
+                        key={index}
+                        onBlur={() => handleInputsBlur(strategy, field)}
+                        onChange={e =>
+                            handleStrategiesInputChange(
+                                strategy,
+                                field,
+                                e.target.value,
+                            )
+                        }
+                        placeholder={field}
+                        type="text"
+                        value={strategiesFormData[strategy][field]}
+                        variant="bordered"
+                    />
+                </div>
             );
         });
     };
