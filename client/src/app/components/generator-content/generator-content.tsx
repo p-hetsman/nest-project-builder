@@ -9,7 +9,7 @@ import {
     initStrategiesState,
 } from './generator-constants';
 import ModalPopUp from './modal-popup/modal-popup';
-import { handleSubmit, isValidURL } from './submit-helper';
+import { checkInputs, handleSubmit, isValidURL } from './submit-helper';
 import SpinnerOverlay from './spinner-overlay';
 import StrategyInputs from './strategy-inputs/strategy-inputs';
 
@@ -46,19 +46,12 @@ export default function SubmitForm() {
     const isInvalid = !isValidProjectName(projectName) && isTouched;
     // Update the button state based on error status
     useEffect(() => {
-        let shouldDisableButton = false;
-
-        checkboxList.forEach(item => {
-            if (checkboxStates[item.name] && item.strategy?.name) {
-                const strategyName = item.strategy?.name;
-                const emptyInputs = Object.values(
-                    strategiesFormData[strategyName],
-                ).some((value: string) => value.trim() === '');
-                if (emptyInputs || hasError) {
-                    shouldDisableButton = true;
-                }
-            }
-        });
+        const shouldDisableButton = checkInputs(
+            checkboxStates,
+            strategiesFormData,
+            hasError,
+            checkboxList,
+        );
 
         const showButton =
             isValidProjectName(projectName) && !shouldDisableButton;

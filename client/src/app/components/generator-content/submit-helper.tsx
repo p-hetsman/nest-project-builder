@@ -124,3 +124,23 @@ export const isValidURL = url => {
     );
     return urlPattern.test(url);
 };
+export function checkInputs(
+    checkboxStates,
+    strategiesFormData,
+    hasError,
+    checkboxList,
+): boolean {
+    let shouldDisableButton = false;
+    checkboxList.forEach(item => {
+        if (checkboxStates[item.name] && item.strategy?.name) {
+            const strategyName = item.strategy?.name;
+            const emptyInputs = Object.values(
+                strategiesFormData[strategyName],
+            ).some((value: string) => value.trim() === '');
+            if (emptyInputs || hasError) {
+                shouldDisableButton = true;
+            }
+        }
+    });
+    return shouldDisableButton;
+}
