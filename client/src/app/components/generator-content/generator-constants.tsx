@@ -50,6 +50,7 @@ export const initFormState = {
     authGoogle: false,
     authFacebook: false,
     authOpenid: false,
+    strategies: {},
 };
 
 export const initStrategiesState = {

@@ -118,7 +118,6 @@ export const getStrategiesFormData = (checkboxList, isBoolean = false) => {
     return formData;
 };
 
-
 export function checkInputs(
     checkboxStates,
     strategiesFormData,
@@ -139,3 +138,18 @@ export function checkInputs(
     });
     return shouldDisableButton;
 }
+export const filterObjectsByEmptyValues = inputObj => {
+    const result = {};
+
+    Object.keys(inputObj).forEach(key => {
+        const filteredValues = Object.fromEntries(
+            Object.entries(inputObj[key]).filter(([_, value]) => value !== ''),
+        );
+
+        if (Object.keys(filteredValues).length > 0) {
+            result[key] = filteredValues;
+        }
+    });
+
+    return result;
+};

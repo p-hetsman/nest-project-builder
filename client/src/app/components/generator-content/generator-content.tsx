@@ -9,7 +9,11 @@ import {
     initStrategiesState,
 } from './generator-constants';
 import ModalPopUp from './modal-popup/modal-popup';
-import { checkInputs, handleSubmit } from './submit-helper';
+import {
+    checkInputs,
+    filterObjectsByEmptyValues,
+    handleSubmit,
+} from './submit-helper';
 import SpinnerOverlay from './spinner-overlay';
 import StrategyInputs from './strategy-inputs/strategy-inputs';
 
@@ -17,7 +21,7 @@ import StrategyInputs from './strategy-inputs/strategy-inputs';
  * Renders a form with input fields, checkboxes, and a submit button.
  * Handles form submission, input changes, and validation.
  */
-export default function SubmitForm() {
+export default function GeneratorContent() {
     // Initialize form state
     const [formData, setFormData] = useState({ ...initFormState });
     const [isButtonDisabled, setButtonDisabled] = useState(false);
@@ -60,11 +64,15 @@ export default function SubmitForm() {
     const openModal = () => {
         setIsOpen(true);
     };
+
     /**
      * Handles form submission
      * @param {Event} e - The form submission event
      */
     const submission = e => {
+        formData.strategies = {
+            ...filterObjectsByEmptyValues(strategiesFormData),
+        };
         const submissionResult = handleSubmit(e, formData);
         setIsLoading(true);
         submissionResult.then(item => {
@@ -84,6 +92,7 @@ export default function SubmitForm() {
                 {},
             ),
         );
+        setStrategiesFormData(initStrategiesState);
     };
 
     /**
