@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Button, Checkbox, Input } from '@nextui-org/react';
 
-import { isValidProjectName } from './validation-helper';
+import { isValidProjectName, isValidURL } from './validation-helper';
 import {
     checkboxList,
     initFormState,
@@ -9,7 +9,7 @@ import {
     initStrategiesState,
 } from './generator-constants';
 import ModalPopUp from './modal-popup/modal-popup';
-import { checkInputs, handleSubmit, isValidURL } from './submit-helper';
+import { checkInputs, handleSubmit } from './submit-helper';
 import SpinnerOverlay from './spinner-overlay';
 import StrategyInputs from './strategy-inputs/strategy-inputs';
 
@@ -37,7 +37,6 @@ export default function SubmitForm() {
     const [touchedFields, setTouchedFields] = useState(
         initStrategiesBooleanState,
     );
-
     const [hasError, setHasError] = useState(false);
 
     const { projectName } = formData;
@@ -148,8 +147,10 @@ export default function SubmitForm() {
     const handleStrategiesInputChange = (strategy, field, value) => {
         let isValidState = false;
 
-        if (field === 'callbackURL' && isValidURL(value)) {
-            isValidState = true;
+        if (field === 'callbackURL') {
+            if (isValidURL(value)) {
+                isValidState = true;
+            }
         } else if (value.length > 0) {
             isValidState = true;
         }
