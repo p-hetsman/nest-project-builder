@@ -1,7 +1,7 @@
 import { generateAuthObjects, getStrategiesFormData } from './submit-helper';
 
 export const commonStrategy = ['clientID', 'clientSecret', 'callbackURL'];
-export const OpenidStrategy = [
+export const openidStrategy = [
     'clientID',
     'clientSecret',
     'callbackURL',
@@ -22,12 +22,12 @@ export const enum StrategyNames {
 
 const generatedAuthObjects = generateAuthObjects();
 
-export interface checkboxListType {
+export interface CheckBoxListType {
     name: string;
     label: string;
-    strategy?: { name: string; value: unknown[] };
+    strategy?: { name: string; value: string[] };
 }
-export const checkboxList: checkboxListType[] = [
+export const checkboxList: CheckBoxListType[] = [
     { name: 'allExceptions', label: 'All Exceptions' },
     { name: 'logger', label: 'Logger' },
     { name: 'validation', label: 'Validation' },

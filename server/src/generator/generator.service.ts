@@ -285,21 +285,25 @@ export class GeneratorService {
     }
 
     const optionsToEnv: Record<string, string[]> = {};
-
+    const authLength = 4;
     Object.keys(strategies).forEach((strategyKey) => {
       const strategy = strategies[strategyKey as keyof AuthData];
       if (areKeysComplete(strategy) && strategy) {
-        const prefix =
-          strategyKey === 'authOpenid'
-            ? 'NEST_PUBLIC_'
-            : `NEST_PUBLIC_${strategyKey.toUpperCase()}_`;
-        const suffix = strategyKey === 'authOpenid' ? '' : '_CLIENT_SECRET';
+        const prefix = 'NEST_PUBLIC_';
+
+        const suffix = '_CLIENT_SECRET';
 
         optionsToEnv[strategyKey] = [
           `
-    ${prefix}${strategyKey.toUpperCase()}_CLIENT_ID=${strategy.clientID}
-    ${strategyKey.toUpperCase()}${suffix}=${strategy.clientSecret}
-    ${prefix}${strategyKey.toUpperCase()}_CALLBACK_URL=${strategy.callbackURL}
+    ${prefix}${strategyKey.slice(authLength).toUpperCase()}_CLIENT_ID=${
+      strategy.clientID
+    }
+    ${strategyKey.slice(authLength).toUpperCase()}${suffix}=${
+      strategy.clientSecret
+    }
+    ${prefix}${strategyKey.slice(authLength).toUpperCase()}_CALLBACK_URL=${
+      strategy.callbackURL
+    }
     ${
       strategyKey === 'authOpenid'
         ? `TRUST_ISSUER_URL=${strategy.trustIssuer || ''}`

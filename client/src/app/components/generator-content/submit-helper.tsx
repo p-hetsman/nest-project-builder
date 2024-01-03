@@ -1,7 +1,7 @@
 import {
     AuthTypes,
     commonStrategy,
-    OpenidStrategy,
+    openidStrategy,
     StrategyNames,
 } from './generator-constants';
 import { isValidProjectName } from './validation-helper';
@@ -15,12 +15,12 @@ import axios from 'axios';
  * @returns {Object} - The result of the form submission.
  */
 export const handleSubmit = async (event, formData) => {
-    event.preventDefault(); // Prevents the default form submission behavior
-    const { projectName } = formData; // Destructure the projectName property from formData
+    event.preventDefault();
+    const { projectName } = formData;
 
     // Check if the projectName is empty or not a valid project name
     if (!projectName || !isValidProjectName(projectName)) {
-        return; // Exit the function if the projectName is invalid
+        return;
     }
 
     try {
@@ -83,7 +83,7 @@ export const generateAuthObjects = (): {
         const strategy = {
             name: mapAuthTypeToStrategyName(authType),
             value:
-                authType === AuthTypes.openid ? OpenidStrategy : commonStrategy,
+                authType === AuthTypes.openid ? openidStrategy : commonStrategy,
         };
         return { name, label, strategy };
     });
