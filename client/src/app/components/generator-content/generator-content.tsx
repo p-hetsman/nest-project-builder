@@ -11,7 +11,7 @@ import {
 import ModalPopUp from './modal-popup/modal-popup';
 import {
     checkInputs,
-    filterObjectsByEmptyValues,
+    filterModifyObjects,
     handleSubmit,
 } from './submit-helper';
 import SpinnerOverlay from './spinner-overlay';
@@ -42,7 +42,6 @@ export default function GeneratorContent() {
         initStrategiesBooleanState,
     );
     const [hasError, setHasError] = useState(false);
-
     const { projectName } = formData;
 
     // Check if project name is invalid and has been touched
@@ -71,7 +70,7 @@ export default function GeneratorContent() {
      */
     const submission = e => {
         formData.strategies = {
-            ...filterObjectsByEmptyValues(strategiesFormData),
+            ...filterModifyObjects(strategiesFormData),
         };
         const submissionResult = handleSubmit(e, formData);
         setIsLoading(true);

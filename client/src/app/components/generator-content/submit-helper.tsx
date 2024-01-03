@@ -138,7 +138,7 @@ export function checkInputs(
     });
     return shouldDisableButton;
 }
-export const filterObjectsByEmptyValues = inputObj => {
+export const filterModifyObjects = inputObj => {
     const result = {};
 
     Object.keys(inputObj).forEach(key => {
@@ -150,6 +150,13 @@ export const filterObjectsByEmptyValues = inputObj => {
             result[key] = filteredValues;
         }
     });
+    const modifiedObject = {};
 
-    return result;
+    for (const key in result) {
+        if (Object.prototype.hasOwnProperty.call(result, key)) {
+            const modifiedKey = key.replace('Strategy', '');
+            modifiedObject[modifiedKey] = result[key];
+        }
+    }
+    return modifiedObject;
 };
