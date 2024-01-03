@@ -16,6 +16,7 @@ import { LoginDto } from './dtos/login.dto';
 import { RegisterDto } from './dtos/register.dto';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { RefreshTokenGuard } from './guards/refresh-token.guard';
 <%if (authGoogle) { %>
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 <% } %>
@@ -32,16 +33,26 @@ export class AuthController {
 
   @HttpCode(HttpStatus.OK)
   @Post('login')
-  login(@Body() signInDto: LoginDto) {
-    return this.authService.login(signInDto.username, signInDto.password);
+  login(@Body() loginDto: LoginDto) {
+    return this.authService.login(loginDto.username, loginDto.password);
   }
 
   @HttpCode(HttpStatus.OK)
   @Post('register')
   async register(@Body() registerDto: RegisterDto) {
-    await this.authService.register(registerDto.username, registerDto.password);
+    return this.authService.register(
+      registerDto.username,
+      registerDto.password,
+    );
+  }
 
-    return this.authService.login(registerDto.username, registerDto.password);
+  @UseGuards(RefreshTokenGuard)
+  @Get('refresh')
+  refreshTokens(@Req() req) {
+    const userId = req.user.sub;
+    const refreshToken = req.user.refreshToken;
+
+    return this.authService.refreshTokens(userId, refreshToken);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -53,31 +64,24 @@ export class AuthController {
   <%if (authGoogle) { %>
     @Get('google')
     @UseGuards(GoogleAuthGuard)
-    async googleLogin() {
-      // Initiates the Google authentication process
-    }
+    async googleLogin() {}
 
     @Get('google/callback')
     @UseGuards(GoogleAuthGuard)
     async googleLoginCallback(@Req() req) {
-      // Handles the Google authentication callback
-      return this.authService.generateToken(req.user);
+      return this.authService.loginSSO(req.user.username);
     }
   <% } %>
 
   <%if (authFacebook) { %>
     @Get('facebook')
     @UseGuards(FacebookAuthGuard)
-    async facebookLogin() {
-      // Initiates the Facebook authentication process
-    }
+    async facebookLogin() {}
 
     @Get('facebook/callback')
     @UseGuards(FacebookAuthGuard)
     async facebookLoginCallback(@Req() req) {
-      // Handles the Facebook authentication callback
-
-      return this.authService.generateToken(req.user);
+      return this.authService.loginSSO(req.user.username);
     }
   <% } %>
 
@@ -89,9 +93,7 @@ export class AuthController {
     @Get('openid/callback')
     @UseGuards(OpenidAuthGuard)
     async openidLoginCallback(@Req() req) {
-      // Handles the Auth0 authentication callback
-
-      return this.authService.generateToken(req.user);
+      return this.authService.loginSSO(req.user.username);
     }
   <% } %>
 }

@@ -1,6 +1,6 @@
 import { Controller, Post, Body, HttpCode } from '@nestjs/common';
 
-import { GenerateDto } from './dtos/generate.dto';
+import { GenerateDto } from './dto/generate.dto';
 import { GeneratorService } from './generator.service';
 
 @Controller('generator')
