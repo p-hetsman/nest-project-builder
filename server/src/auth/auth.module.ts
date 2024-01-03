@@ -5,8 +5,10 @@ import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { UsersModule } from '../users/users.module';
+import { RolesModule } from '../roles/roles.module';
 import { jwtConstants } from './constants';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { RefreshTokenStrategy } from './strategies/refresh-token.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { FacebookStrategy } from './strategies/facebook.strategy';
 import {
@@ -26,6 +28,7 @@ const OpenidStrategyFactory = {
 @Module({
   imports: [
     UsersModule,
+    RolesModule,
     PassportModule.register({ defaultStrategy: 'jwt', session: true }),
     JwtModule.register({
       secret: jwtConstants.secret,
@@ -36,6 +39,7 @@ const OpenidStrategyFactory = {
   providers: [
     AuthService,
     JwtStrategy,
+    RefreshTokenStrategy,
     GoogleStrategy,
     FacebookStrategy,
     OpenidStrategyFactory,

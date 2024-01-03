@@ -48,7 +48,9 @@ export class GeneratorService {
       authJwt: [
         'auth/dtos/',
         'auth/guards/jwt-auth.guard.ts',
+        'auth/guards/refresh-token.guard.ts',
         'auth/strategies/jwt.strategy.ts',
+        'auth/strategies/refresh-token.strategy.ts',
         'auth/constants.ts',
         'auth/auth.service.ts',
         'users/',
@@ -75,6 +77,19 @@ export class GeneratorService {
         fs.copy(
           path.join(this.templatesFolder, file),
           path.join(process.cwd(), generatedProjectFolder, 'src', file),
+        ),
+      ),
+    );
+  };
+
+  private copyFilesToRoot = async (generatedProjectFolder: string) => {
+    const files = ['Dockerfile'];
+
+    return Promise.all(
+      files.map((file) =>
+        fs.copy(
+          path.join(this.templatesFolder, file),
+          path.join(process.cwd(), generatedProjectFolder, file),
         ),
       ),
     );
@@ -322,7 +337,7 @@ export class GeneratorService {
     const data = { authFacebook: fb, authGoogle: google, authOpenid: openid };
 
     return this.generateFile(
-      path.join(this.templatesFolder, '.env.example.ejs'),
+      path.join(this.templatesFolder, '.env.example.ts.ejs'),
       data,
       path.join(process.cwd(), generatedProjectFolder, '.', '.env'),
     );
@@ -350,6 +365,8 @@ export class GeneratorService {
 
     await Promise.all([
       this.copyFilesToSrc(normalizedOptions, generatedProjectFolder),
+      this.copyFilesToRoot(generatedProjectFolder),
+
       this.generateMainTs(normalizedOptions, generatedProjectFolder),
       this.generateAppModule(normalizedOptions, generatedProjectFolder),
       this.generateAuthModule(normalizedOptions, generatedProjectFolder),
