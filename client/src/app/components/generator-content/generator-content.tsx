@@ -1,14 +1,29 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, Checkbox, Input } from '@nextui-org/react';
 
-import { isValidProjectName } from './validation-helper';
-import { checkboxList, initFormState } from './generator-constants';
+import { isValidProjectName, isValidURL } from './validation-helper';
+import {
+    checkboxList,
+    initFormState,
+    initStrategiesBooleanState,
+    initStrategiesState,
+} from './generator-constants';
 import ModalPopUp from './modal-popup/modal-popup';
-import { handleSubmit } from './submit-helper';
+import {
+    checkInputs,
+    filterModifyObjects,
+    handleSubmit,
+} from './submit-helper';
 import SpinnerOverlay from './spinner-overlay';
+import StrategyInputs from './strategy-inputs/strategy-inputs';
 
-export default function SubmitForm() {
-    const [formData, setFormData] = useState(initFormState);
+/**
+ * Renders a form with input fields, checkboxes, and a submit button.
+ * Handles form submission, input changes, and validation.
+ */
+export default function GeneratorContent() {
+    // Initialize form state
+    const [formData, setFormData] = useState({ ...initFormState });
     const [isButtonDisabled, setButtonDisabled] = useState(false);
     const [checkboxStates, setCheckboxStates] = useState(
         checkboxList.reduce(
@@ -20,25 +35,55 @@ export default function SubmitForm() {
     const [isOpen, setIsOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [isTouched, setIsTouched] = useState(false);
-
+    const [strategiesFormData, setStrategiesFormData] =
+        useState(initStrategiesState);
+    const [validity, setValidity] = useState(initStrategiesBooleanState);
+    const [touchedFields, setTouchedFields] = useState(
+        initStrategiesBooleanState,
+    );
+    const [hasError, setHasError] = useState(false);
     const { projectName } = formData;
 
-    const handleOpenModal = () => {
+    // Check if project name is invalid and has been touched
+    const isInvalid = !isValidProjectName(projectName) && isTouched;
+    // Update the button state based on error status
+    useEffect(() => {
+        const shouldDisableButton = checkInputs(
+            checkboxStates,
+            strategiesFormData,
+            hasError,
+            checkboxList,
+        );
+
+        const showButton =
+            isValidProjectName(projectName) && !shouldDisableButton;
+        setButtonDisabled(showButton);
+    }, [checkboxStates, touchedFields, projectName, hasError]);
+
+    const openModal = () => {
         setIsOpen(true);
     };
 
+    /**
+     * Handles form submission
+     * @param {Event} e - The form submission event
+     */
     const submission = e => {
+        formData.strategies = {
+            ...filterModifyObjects(strategiesFormData),
+        };
         const submissionResult = handleSubmit(e, formData);
         setIsLoading(true);
         submissionResult.then(item => {
             if (item) {
                 setIsLoading(false);
                 setSubmissionText(item?.text);
-                handleOpenModal();
+                openModal();
                 setIsTouched(false);
             }
         });
 
+        // Reset form data and checkbox states
         setFormData(initFormState);
         setCheckboxStates(
             checkboxList.reduce(
@@ -46,17 +91,21 @@ export default function SubmitForm() {
                 {},
             ),
         );
+        setStrategiesFormData(initStrategiesState);
     };
 
+    /**
+     * Handles input "projectName" changes
+     * @param {Event} event - The input change event
+     */
     const handleChange = event => {
-        setButtonDisabled(true);
-
-        if (!isValidProjectName(projectName)) {
-            setButtonDisabled(false);
-        }
-
         const { name, value, type, checked } = event.target;
         const newValue = type === 'checkbox' ? checked : value;
+
+        if (!checked) {
+            resetFormData(name);
+        }
+
         setCheckboxStates(prevState => ({
             ...prevState,
             [name]: checked,
@@ -73,11 +122,80 @@ export default function SubmitForm() {
             [name]: newValue,
         }));
     };
+
+    /**
+     * Handles input "projectName" blur event
+     */
     const handleBlur = () => {
         setIsTouched(true);
     };
-    const isInvalid = !isValidProjectName(projectName) && isTouched;
 
+    /**
+     * Handles strategy input blur event
+     * @param {string} strategy - The strategy name
+     * @param {string} field - The field name
+     */
+    const handleInputsBlur = (strategy, field) => {
+        setTouchedFields(touchedFields => ({
+            ...touchedFields,
+            [strategy]: {
+                ...touchedFields[strategy],
+                [field]: true,
+            },
+        }));
+    };
+
+    /**
+     * Handles the input change for strategies.
+     *
+     * @param {string} strategy - The strategy name.
+     * @param {string} field - The field being modified.
+     * @param {string} value - The new value.
+     */
+    const handleStrategiesInputChange = (strategy, field, value) => {
+        let isValidState = false;
+
+        if (field === 'callbackURL') {
+            if (isValidURL(value)) {
+                isValidState = true;
+            }
+        } else if (value.length > 0) {
+            isValidState = true;
+        }
+
+        setValidity(prevValidity => ({
+            ...prevValidity,
+            [strategy]: {
+                ...prevValidity[strategy],
+                [field]: isValidState,
+            },
+        }));
+
+        setStrategiesFormData(prevFormData => ({
+            ...prevFormData,
+            [strategy]: {
+                ...prevFormData[strategy],
+                [field]: value,
+            },
+        }));
+    };
+
+    const resetFormData = label => {
+        const strategyName = label + 'Strategy';
+
+        setStrategiesFormData(prevData => ({
+            ...prevData,
+            [strategyName]: { ...initStrategiesState[strategyName] },
+        }));
+        setValidity(prevData => ({
+            ...prevData,
+            [strategyName]: { ...initStrategiesBooleanState[strategyName] },
+        }));
+        setTouchedFields(prevData => ({
+            ...prevData,
+            [strategyName]: { ...initStrategiesBooleanState[strategyName] },
+        }));
+    };
     return (
         <div>
             {isLoading && <SpinnerOverlay />}
@@ -116,6 +234,20 @@ export default function SubmitForm() {
                         >
                             {item.label}
                         </Checkbox>
+
+                        {checkboxStates[item.name] && item.strategy?.name && (
+                            <StrategyInputs
+                                handleInputsBlur={handleInputsBlur}
+                                handleStrategiesInputChange={
+                                    handleStrategiesInputChange
+                                }
+                                setHasError={setHasError}
+                                strategiesFormData={strategiesFormData}
+                                strategyName={item.strategy?.name}
+                                touchedFields={touchedFields}
+                                validity={validity}
+                            />
+                        )}
                     </div>
                 ))}
 

@@ -9,16 +9,14 @@ import {
 } from 'openid-client';
 
 import { AuthService } from '../auth.service';
+import 'dotenv/config';
 
 export const buildOpenIdClient = async () => {
-  const TrustIssuer = await Issuer.discover(
-    `https://dev-i7t32emylmkf1awj.us.auth0.com/oidc/.well-known/openid-configuration`,
-  );
+  const TrustIssuer = await Issuer.discover(process.env.TRUST_ISSUER_URL);
 
   const client = new TrustIssuer.Client({
-    client_id: 'cVendLmui5q5fZW3IpdBTwSD4q0M4cqa',
-    client_secret:
-      'l0wsHxlBGRS2nqxqm5fVXanTfPixXTqCyotvPbhHiC6UZRxqWaXvNVLVAUieUt3E',
+    client_id: process.env.NEST_PUBLIC_OPENID_CLIENT_ID,
+    client_secret: process.env.OPENID_CLIENT_SECRET,
     token_endpoint_auth_method: 'client_secret_post',
   });
 
@@ -36,7 +34,7 @@ export class OpenidStrategy extends PassportStrategy(Strategy, 'openid') {
     super({
       client: client,
       params: {
-        redirect_uri: 'http://localhost:8081/auth/openid/callback',
+        redirect_uri: process.env.NEST_PUBLIC_OPENID_CALLBACK_URL,
         scope: 'openid profile email',
       },
       passReqToCallback: false,

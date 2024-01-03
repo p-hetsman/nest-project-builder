@@ -3,14 +3,14 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 
 import { AuthService } from '../auth.service';
-
+import 'dotenv/config';
 @Injectable()
 export class FacebookStrategy extends PassportStrategy(Strategy, 'facebook') {
   constructor(private authService: AuthService) {
     super({
-      clientID: 'YOUR_FACEBOOK_APP_ID',
-      clientSecret: 'YOUR_FACEBOOK_APP_SECRET',
-      callbackURL: 'http://localhost:3000/auth/facebook/callback',
+      clientID: process.env.NEST_PUBLIC_FACEBOOK_CLIENT_ID,
+      clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
+      callbackURL: process.env.NEST_PUBLIC_FACEBOOK_CALLBACK_URL,
       profileFields: ['id', 'displayName', 'email'],
     });
   }

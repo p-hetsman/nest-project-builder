@@ -6,12 +6,13 @@ import { exec } from 'node:child_process';
 import * as ejs from 'ejs';
 import * as fs from 'fs-extra';
 
-import { GenerateOptions } from './types/generate-options';
+import { AuthData, GenerateOptions } from './types/generate-options';
 import {
   generateCorsConfigOptions,
   generatePostgresConfigOptions,
   generateSwaggerConfigOptions,
 } from './constants';
+import { areKeysComplete, mapOptionsToArrayOfData } from './generator.helpers';
 
 const execPromise = promisify(exec);
 
@@ -23,19 +24,6 @@ export class GeneratorService {
     'generator',
     'templates',
   );
-
-  private mapOptionsToArrayOfData = <T>(
-    options: GenerateOptions,
-    optionsTo: Record<string, T[]>,
-  ) => {
-    return Object.keys(options).reduce((acc, key) => {
-      if (optionsTo[key] && options[key]) {
-        return [...acc, ...optionsTo[key]];
-      }
-
-      return acc;
-    }, []);
-  };
 
   private generateDefaultProject = async (
     generatedProjectFolder: string,
@@ -79,11 +67,11 @@ export class GeneratorService {
         'auth/guards/openid-auth.guard.ts',
         'auth/strategies/openid.strategy.ts',
       ],
-      postgres: ['docker-compose.yml', '.env.example'],
+      postgres: ['docker-compose.yml'],
     };
 
     return Promise.all(
-      this.mapOptionsToArrayOfData(options, optionsToFiles).map((file) =>
+      mapOptionsToArrayOfData(options, optionsToFiles).map((file) =>
         fs.copy(
           path.join(this.templatesFolder, file),
           path.join(process.cwd(), generatedProjectFolder, 'src', file),
@@ -133,7 +121,7 @@ export class GeneratorService {
 
     const packages = [
       'express-session',
-      ...this.mapOptionsToArrayOfData(options, optionsToModules),
+      ...mapOptionsToArrayOfData(options, optionsToModules),
     ];
 
     try {
@@ -194,24 +182,18 @@ export class GeneratorService {
     };
 
     const data = {
-      nestjsCommonImport: this.mapOptionsToArrayOfData(
+      nestjsCommonImport: mapOptionsToArrayOfData(
         options,
         optionsToNestjsCommonImport,
       ).join(', '),
-      imports: this.mapOptionsToArrayOfData(options, optionsToImports),
-      nestFactoryOptions: this.mapOptionsToArrayOfData(
+      imports: mapOptionsToArrayOfData(options, optionsToImports),
+      nestFactoryOptions: mapOptionsToArrayOfData(
         options,
         optionsToNestFactoryOptions,
       ),
-      globalPipes: this.mapOptionsToArrayOfData(options, optionsToGlobalPipes),
-      globalFilters: this.mapOptionsToArrayOfData(
-        options,
-        optionsToGlobalFilters,
-      ),
-      globalOptionsConfig: this.mapOptionsToArrayOfData(
-        options,
-        optionsAppConfig,
-      ),
+      globalPipes: mapOptionsToArrayOfData(options, optionsToGlobalPipes),
+      globalFilters: mapOptionsToArrayOfData(options, optionsToGlobalFilters),
+      globalOptionsConfig: mapOptionsToArrayOfData(options, optionsAppConfig),
       ...options,
     };
 
@@ -236,11 +218,8 @@ export class GeneratorService {
       postgres: [generatePostgresConfigOptions()],
     };
     const data = {
-      imports: this.mapOptionsToArrayOfData(options, optionsToImports),
-      moduleImports: this.mapOptionsToArrayOfData(
-        options,
-        optionsToModuleImports,
-      ),
+      imports: mapOptionsToArrayOfData(options, optionsToImports),
+      moduleImports: mapOptionsToArrayOfData(options, optionsToModuleImports),
       ...options,
     };
     return this.generateFile(
@@ -288,6 +267,67 @@ export class GeneratorService {
     ]);
   };
 
+  private generateEnvFile = async (
+    options: GenerateOptions,
+    generatedProjectFolder: string,
+  ): Promise<void> => {
+    const {
+      authJwt,
+      postgres,
+      authFacebook,
+      authGoogle,
+      authOpenid,
+      strategies,
+    } = options;
+
+    if (!(authJwt || postgres || authFacebook || authGoogle || authOpenid)) {
+      return;
+    }
+
+    const optionsToEnv: Record<string, string[]> = {};
+    const authLength = 4;
+    Object.keys(strategies).forEach((strategyKey) => {
+      const strategy = strategies[strategyKey as keyof AuthData];
+      if (areKeysComplete(strategy) && strategy) {
+        const prefix = 'NEST_PUBLIC_';
+
+        const suffix = '_CLIENT_SECRET';
+
+        optionsToEnv[strategyKey] = [
+          `
+    ${prefix}${strategyKey.slice(authLength).toUpperCase()}_CLIENT_ID=${
+      strategy.clientID
+    }
+    ${strategyKey.slice(authLength).toUpperCase()}${suffix}=${
+      strategy.clientSecret
+    }
+    ${prefix}${strategyKey.slice(authLength).toUpperCase()}_CALLBACK_URL=${
+      strategy.callbackURL
+    }
+    ${
+      strategyKey === 'authOpenid'
+        ? `TRUST_ISSUER_URL=${strategy.trustIssuer || ''}`
+        : ''
+    }
+    `,
+        ];
+      }
+    });
+
+    const {
+      authFacebook: fb,
+      authGoogle: google,
+      authOpenid: openid,
+    } = optionsToEnv;
+    const data = { authFacebook: fb, authGoogle: google, authOpenid: openid };
+
+    return this.generateFile(
+      path.join(this.templatesFolder, '.env.example.ejs'),
+      data,
+      path.join(process.cwd(), generatedProjectFolder, '.', '.env'),
+    );
+  };
+
   generate = async (options: GenerateOptions) => {
     const normalizedOptions = {
       ...options,
@@ -316,6 +356,7 @@ export class GeneratorService {
 
       this.addModulesInPackageJson(normalizedOptions, generatedProjectFolder),
       this.formatWithPrettier(generatedProjectFolder),
+      this.generateEnvFile(normalizedOptions, generatedProjectFolder),
     ]);
 
     await this.deleteNodeModules(generatedProjectFolder);
