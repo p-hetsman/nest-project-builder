@@ -322,7 +322,7 @@ export class GeneratorService {
     const data = { authFacebook: fb, authGoogle: google, authOpenid: openid };
 
     return this.generateFile(
-      path.join(this.templatesFolder, '.env.example.ts.ejs'),
+      path.join(this.templatesFolder, '.env.example.ejs'),
       data,
       path.join(process.cwd(), generatedProjectFolder, '.', '.env'),
     );
