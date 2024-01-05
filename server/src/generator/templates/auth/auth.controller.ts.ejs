@@ -27,6 +27,9 @@ import { FacebookAuthGuard } from './guards/facebook-auth.guard';
 import { OpenidAuthGuard } from './guards/openid-auth.guard';
 <% } %>
 
+import { Roles } from './decorators/roles.decorator';
+import { RolesGuard } from './guards/roles.guard';
+
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -55,8 +58,9 @@ export class AuthController {
     return this.authService.refreshTokens(userId, refreshToken);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('profile')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   getProfile(@Request() req) {
     return req.user;
   }

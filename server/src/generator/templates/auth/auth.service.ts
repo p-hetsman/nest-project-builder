@@ -8,22 +8,25 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
 import { UsersService } from '../users/users.service';
+import { RolesService } from '../roles/roles.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
+    private rolesService: RolesService,
     private jwtService: JwtService,
   ) {}
 
   async validateUser(username: string) {
+    const role = await this.rolesService.findOne('user');
     const user = await this.usersService.findOne(username);
 
     return user
       ? user
       : await this.usersService.create({
           username,
-          role: 'user',
+          role,
           refreshToken: null,
         });
   }
@@ -95,10 +98,11 @@ export class AuthService {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
+    const role = await this.rolesService.findOne('user');
     const newUser = await this.usersService.create({
       username,
       password: passwordHash,
-      role: 'user',
+      role,
       refreshToken: null,
     });
 
@@ -153,7 +157,7 @@ export class AuthService {
     return {
       id: user._id,
       username: user.username,
-      role: user.role,
+      role: user.role.name,
     };
   }
 }

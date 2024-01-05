@@ -53,7 +53,10 @@ export class GeneratorService {
         'auth/strategies/refresh-token.strategy.ts',
         'auth/constants.ts',
         'auth/auth.service.ts',
+        'auth/guards/roles.guard.ts',
+        'auth/decorators/',
         'users/',
+        'roles/',
         'database/',
         'common/providers/database.providers.ts',
       ],
@@ -310,20 +313,16 @@ export class GeneratorService {
 
         optionsToEnv[strategyKey] = [
           `
-    ${prefix}${strategyKey.slice(authLength).toUpperCase()}_CLIENT_ID=${
-      strategy.clientID
-    }
-    ${strategyKey.slice(authLength).toUpperCase()}${suffix}=${
-      strategy.clientSecret
-    }
-    ${prefix}${strategyKey.slice(authLength).toUpperCase()}_CALLBACK_URL=${
-      strategy.callbackURL
-    }
-    ${
-      strategyKey === 'authOpenid'
-        ? `TRUST_ISSUER_URL=${strategy.trustIssuer || ''}`
-        : ''
-    }
+    ${prefix}${strategyKey.slice(authLength).toUpperCase()}_CLIENT_ID=${strategy.clientID
+          }
+    ${strategyKey.slice(authLength).toUpperCase()}${suffix}=${strategy.clientSecret
+          }
+    ${prefix}${strategyKey.slice(authLength).toUpperCase()}_CALLBACK_URL=${strategy.callbackURL
+          }
+    ${strategyKey === 'authOpenid'
+            ? `TRUST_ISSUER_URL=${strategy.trustIssuer || ''}`
+            : ''
+          }
     `,
         ];
       }
