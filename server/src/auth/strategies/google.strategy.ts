@@ -3,15 +3,15 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 
 import { AuthService } from '../auth.service';
+import 'dotenv/config';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor(private authService: AuthService) {
     super({
-      clientID:
-        '412427081453-8adqtvqiulq2tqvf814guui73dlvop8f.apps.googleusercontent.com',
-      clientSecret: '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',
-      callbackURL: 'http://localhost:8080/auth/google/callback',
+      clientID: process.env.NEST_PUBLIC_GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: process.env.NEST_PUBLIC_GOOGLE_CALLBACK_URL,
       scope: ['profile', 'email'],
     });
   }
