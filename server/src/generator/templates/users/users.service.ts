@@ -16,7 +16,7 @@ export class UsersService {
   }
 
   async findById(id: string): Promise<UserDocument> {
-    return this.userModel.findById(id);
+    return this.userModel.findById(id).populate('role').exec();
   }
 
   async create(createUserDto: User): Promise<UserDocument> {

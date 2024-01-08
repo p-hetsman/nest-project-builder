@@ -25,7 +25,11 @@ import { AppService } from './app.service';
     <%- moduleImports %>
     <% }) -%>
     ],
-  controllers: [AppController],
+  controllers: [AppController,
+  <%if (controllersImports) { %>
+    TestController
+  <% } %>
+  ],
   providers: [AppService],
 })
 export class AppModule {}

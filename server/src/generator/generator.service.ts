@@ -53,9 +53,13 @@ export class GeneratorService {
         'auth/strategies/refresh-token.strategy.ts',
         'auth/constants.ts',
         'auth/auth.service.ts',
+        'auth/guards/roles.guard.ts',
+        'auth/decorators/',
         'users/',
+        'roles/',
         'database/',
         'common/providers/database.providers.ts',
+        'test-route',
       ],
       authGoogle: [
         'auth/guards/google-auth.guard.ts',
@@ -228,15 +232,26 @@ export class GeneratorService {
         `import { TypeOrmModule } from '@nestjs/typeorm';`,
         `import 'dotenv/config';`,
       ],
+      authJwt: [
+        `import { TestController } from './test-route/test.controller';`,
+      ],
     };
     const optionsToModuleImports = {
       postgres: [generatePostgresConfigOptions()],
     };
+    const optionsToControllersImports = {
+      authJwt: ['TestController'],
+    };
     const data = {
       imports: mapOptionsToArrayOfData(options, optionsToImports),
       moduleImports: mapOptionsToArrayOfData(options, optionsToModuleImports),
+      controllersImports: mapOptionsToArrayOfData(
+        options,
+        optionsToControllersImports,
+      ),
       ...options,
     };
+    console.log(data);
     return this.generateFile(
       path.join(this.templatesFolder, 'app.module.ts.ejs'),
       data,
@@ -286,16 +301,9 @@ export class GeneratorService {
     options: GenerateOptions,
     generatedProjectFolder: string,
   ): Promise<void> => {
-    const {
-      authJwt,
-      postgres,
-      authFacebook,
-      authGoogle,
-      authOpenid,
-      strategies,
-    } = options;
+    const { authJwt, strategies } = options;
 
-    if (!(authJwt || postgres || authFacebook || authGoogle || authOpenid)) {
+    if (!authJwt) {
       return;
     }
 
@@ -337,7 +345,7 @@ export class GeneratorService {
     const data = { authFacebook: fb, authGoogle: google, authOpenid: openid };
 
     return this.generateFile(
-      path.join(this.templatesFolder, '.env.example.ts.ejs'),
+      path.join(this.templatesFolder, '.env.example.ejs'),
       data,
       path.join(process.cwd(), generatedProjectFolder, '.', '.env'),
     );
