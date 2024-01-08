@@ -59,6 +59,7 @@ export class GeneratorService {
         'roles/',
         'database/',
         'common/providers/database.providers.ts',
+        'test-route',
       ],
       authGoogle: [
         'auth/guards/google-auth.guard.ts',
@@ -231,15 +232,26 @@ export class GeneratorService {
         `import { TypeOrmModule } from '@nestjs/typeorm';`,
         `import 'dotenv/config';`,
       ],
+      authJwt: [
+        `import { TestController } from './test-route/test.controller';`,
+      ],
     };
     const optionsToModuleImports = {
       postgres: [generatePostgresConfigOptions()],
     };
+    const optionsToControllersImports = {
+      authJwt: ['TestController'],
+    };
     const data = {
       imports: mapOptionsToArrayOfData(options, optionsToImports),
       moduleImports: mapOptionsToArrayOfData(options, optionsToModuleImports),
+      controllersImports: mapOptionsToArrayOfData(
+        options,
+        optionsToControllersImports,
+      ),
       ...options,
     };
+    console.log(data);
     return this.generateFile(
       path.join(this.templatesFolder, 'app.module.ts.ejs'),
       data,
@@ -289,16 +301,9 @@ export class GeneratorService {
     options: GenerateOptions,
     generatedProjectFolder: string,
   ): Promise<void> => {
-    const {
-      authJwt,
-      postgres,
-      authFacebook,
-      authGoogle,
-      authOpenid,
-      strategies,
-    } = options;
+    const { authJwt, strategies } = options;
 
-    if (!(authJwt || postgres || authFacebook || authGoogle || authOpenid)) {
+    if (!authJwt) {
       return;
     }
 
@@ -313,16 +318,20 @@ export class GeneratorService {
 
         optionsToEnv[strategyKey] = [
           `
-    ${prefix}${strategyKey.slice(authLength).toUpperCase()}_CLIENT_ID=${strategy.clientID
-          }
-    ${strategyKey.slice(authLength).toUpperCase()}${suffix}=${strategy.clientSecret
-          }
-    ${prefix}${strategyKey.slice(authLength).toUpperCase()}_CALLBACK_URL=${strategy.callbackURL
-          }
-    ${strategyKey === 'authOpenid'
-            ? `TRUST_ISSUER_URL=${strategy.trustIssuer || ''}`
-            : ''
-          }
+    ${prefix}${strategyKey.slice(authLength).toUpperCase()}_CLIENT_ID=${
+      strategy.clientID
+    }
+    ${strategyKey.slice(authLength).toUpperCase()}${suffix}=${
+      strategy.clientSecret
+    }
+    ${prefix}${strategyKey.slice(authLength).toUpperCase()}_CALLBACK_URL=${
+      strategy.callbackURL
+    }
+    ${
+      strategyKey === 'authOpenid'
+        ? `TRUST_ISSUER_URL=${strategy.trustIssuer || ''}`
+        : ''
+    }
     `,
         ];
       }
