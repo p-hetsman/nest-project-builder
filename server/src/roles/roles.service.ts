@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { Model } from 'mongoose';
 
-import { Role, RoleDocument } from './schemas/role.schema';
+import { Permission, Role, RoleDocument } from './schemas/role.schema';
 import { UpdateRoleDto } from './dto/update-role.dto';
 
 @Injectable()
@@ -9,7 +9,7 @@ export class RolesService {
   constructor(
     @Inject('ROLE_MODEL')
     private roleModel: Model<Role>,
-  ) {}
+  ) { }
 
   async findOne(name: string): Promise<RoleDocument> {
     return this.roleModel.findOne({ name }).exec();
@@ -19,9 +19,8 @@ export class RolesService {
     return this.roleModel.findById(id);
   }
 
-  async create(createRoleDto: Role): Promise<RoleDocument> {
-    const createdRole = new this.roleModel(createRoleDto);
-
+  async create(name: string, permissions: Permission[]): Promise<RoleDocument> {
+    const createdRole = new this.roleModel({ name, permissions });
     return createdRole.save();
   }
 
