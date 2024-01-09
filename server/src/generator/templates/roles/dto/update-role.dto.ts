@@ -1,4 +1,8 @@
 export class UpdateRoleDto {
   name?: string;
-  permissions?: string[];
+  permissions?: Permission[];
+}
+export class Permission {
+  action: string;
+  subject: string;
 }

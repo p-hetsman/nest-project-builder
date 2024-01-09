@@ -1,5 +1,6 @@
 import { Document } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Permission } from '../dto/update-role.dto';
 
 @Schema()
 export class Role {
@@ -7,7 +8,7 @@ export class Role {
   name: string;
 
   @Prop({ type: [String] })
-  permissions: string[];
+  permissions: Permission[];
 }
 
 export type RoleDocument = Role & Document;
