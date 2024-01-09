@@ -12,11 +12,12 @@ import { LogRequestMiddleware } from './common/middlewares/log-request.middlewar
 
 import { GeneratorModule } from './generator/generator.module';
 import { TestController } from './test-route/test.controller';
-
+import { CaslGuard } from './auth/guards/casl.guard';
+import { JwtService } from '@nestjs/jwt';
 @Module({
   imports: [AuthModule, UsersModule, DatabaseModule, GeneratorModule],
   controllers: [AppController, TestController],
-  providers: [AppService],
+  providers: [AppService, CaslGuard, JwtService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
