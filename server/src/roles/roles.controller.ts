@@ -1,9 +1,9 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { RolesService } from 'src/roles/roles.service';
 
-@Controller('role-creator')
+@Controller('roles')
 export class RoleCreatorController {
-  constructor(private readonly roleService: RolesService) {}
+  constructor(private readonly roleService: RolesService) { }
 
   @Post()
   async createRole(

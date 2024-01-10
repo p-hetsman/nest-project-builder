@@ -14,16 +14,10 @@ import { GeneratorModule } from './generator/generator.module';
 import { TestController } from './test-route/test.controller';
 import { CaslGuard } from './auth/guards/casl.guard';
 import { JwtService } from '@nestjs/jwt';
-import { RoleCreatorModule } from './role-creator/role-creator.module';
+
 
 @Module({
-  imports: [
-    AuthModule,
-    UsersModule,
-    DatabaseModule,
-    GeneratorModule,
-    RoleCreatorModule,
-  ],
+  imports: [AuthModule, UsersModule, DatabaseModule, GeneratorModule],
   controllers: [AppController, TestController],
   providers: [AppService, CaslGuard, JwtService],
 })

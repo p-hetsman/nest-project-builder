@@ -5,6 +5,10 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Action, CheckPolicies } from 'src/auth/policies/constants';
 
+const testAction = Action.Read;
+const testPolicy = 'all';
+const testPermission = `${testAction}_${testPolicy}`;
+
 @Controller('test')
 export class TestController {
   @Get('')
@@ -16,10 +20,10 @@ export class TestController {
 
   @Get('/permission')
   @UseGuards(CaslGuard)
-  @CheckPolicies(Action.Read + '_' + 'all')
+  @CheckPolicies(testPermission)
   getPermission(@Request() req) {
     return {
-      message: `Permission '${Action.Read}'  granted for ${req.user.username}`,
+      message: `Permission '${testAction}' with subject '${testPolicy}' granted for ${req.user.username}`,
     };
   }
 }
