@@ -20,14 +20,25 @@ export class CaslGuard implements CanActivate {
     private readonly reflector: Reflector,
     private usersService: UsersService,
   ) { }
+
+  /**
+   * Extracts the token from the authorization header of the given request.
+   *
+   * @param {Request} request - The HTTP request object.
+   * @return {string | undefined} - The extracted token if it exists, otherwise undefined.
+   */
   private extractTokenFromHeader(request: Request): string | undefined {
-    const authorizationHeader = request.headers.authorization;
-    const [type, token] = authorizationHeader
-      ? authorizationHeader.split(' ')
-      : [];
+    const authHeader = request.headers.authorization;
+    const [type, token] = authHeader ? authHeader.split(' ') : [];
     return type === 'Bearer' ? token : undefined;
   }
 
+  /**
+   * Asynchronously determines if the user can activate the specified route.
+   *
+   * @param {ExecutionContext} context - The execution context of the route.
+   * @return {Promise<boolean>} A promise that resolves to a boolean indicating if the user can activate the route.
+   */
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const policyHandlers = this.reflector.get<string[]>(
       CHECK_POLICIES_KEY,
@@ -35,12 +46,14 @@ export class CaslGuard implements CanActivate {
     );
 
     if (!policyHandlers) {
-      return true; // No policies defined, allow access
+      return true;
     }
+
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
+
     if (!token) {
-      throw new UnauthorizedException('token is missing.');
+      throw new UnauthorizedException('Token is missing.');
     }
 
     try {
@@ -48,14 +61,16 @@ export class CaslGuard implements CanActivate {
         secret: jwtConstants.secret,
       });
 
-      request['user'] = payload;
+      request.user = payload;
 
       const user = (
         await this.usersService.findByIdWithRoleDetails(payload.sub)
       )[0];
+
       if (!user || !user.role) {
         throw new UnauthorizedException('User or role not found.');
       }
+
       const [action, resource] = policyHandlers[0].split('_');
       const abilities = defineAbilitiesFor(user, { action, resource });
       const allowed = policyHandlers.every((handler) => {
