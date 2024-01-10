@@ -27,7 +27,38 @@ export class RolesService {
   async findAll(): Promise<RoleDocument[]> {
     return this.roleModel.find().exec();
   }
+  async findAllNames(): Promise<string[]> {
+    try {
+      const roles = await this.roleModel.find({}, 'name').lean();
+      const names = roles.map((role) => role.name);
+      return names;
+    } catch (error) {
+      return error;
+    }
+  }
+  async findAllPermissions(): Promise<RoleDocument[]> {
+    const pipeline = [
+      { $unwind: '$permissions' },
+      {
+        $group: {
+          _id: {
+            action: '$permissions.action',
+            subject: '$permissions.subject',
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          action: '$_id.action',
+          subject: '$_id.subject',
+        },
+      },
+    ];
 
+    const result = await this.roleModel.aggregate(pipeline).exec();
+    return result;
+  }
   async update(
     id: string,
     updateRoleDto: UpdateRoleDto,
