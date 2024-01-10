@@ -43,3 +43,47 @@ export function generatePostgresConfigOptions() {
   "synchronize": process.env.NODE_ENV === 'production',
   }),`;
 }
+
+export const authJwtCopyFiles = [
+  'auth/dtos/',
+  'auth/guards/jwt-auth.guard.ts',
+  'auth/guards/refresh-token.guard.ts',
+  'auth/strategies/jwt.strategy.ts',
+  'auth/strategies/refresh-token.strategy.ts',
+  'auth/constants.ts',
+  'auth/auth.service.ts',
+  'auth/guards/roles.guard.ts',
+  'auth/decorators/',
+  'users/',
+  'roles/',
+  'database/',
+  'common/providers/database.providers.ts',
+  'test-route',
+];
+export const authGoogleCopyFiles = [
+  'auth/guards/google-auth.guard.ts',
+  'auth/strategies/google.strategy.ts',
+];
+export const authFacebookCopyFiles = [
+  'auth/guards/facebook-auth.guard.ts',
+  'auth/strategies/facebook.strategy.ts',
+];
+export const authOpenidCopyFiles = [
+  'auth/guards/openid-auth.guard.ts',
+  'auth/strategies/openid.strategy.ts',
+];
+export const allExceptionsCopyFiles = [
+  'common/filters/all-exceptions.filter.ts',
+  'common/types/app-request.ts',
+];
+export const packageJsonAuthJwt = [
+  'cookie-parser',
+  '@nestjs/passport',
+  '@nestjs/mongoose',
+  '@nestjs/jwt',
+  'mongoose',
+  'passport-jwt',
+  'bcrypt',
+  'class-transformer',
+  'class-validator',
+];

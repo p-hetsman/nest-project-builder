@@ -1,18 +1,30 @@
 import { Injectable } from '@nestjs/common';
 import * as path from 'node:path';
-import { readFile, writeFile } from 'node:fs/promises';
+
 import { promisify } from 'node:util';
 import { exec } from 'node:child_process';
-import * as ejs from 'ejs';
 import * as fs from 'fs-extra';
 
-import { AuthData, GenerateOptions } from './types/generate-options';
+import { GenerateOptions } from './types/generate-options';
+
 import {
+  allExceptionsCopyFiles,
+  authFacebookCopyFiles,
+  authGoogleCopyFiles,
+  authJwtCopyFiles,
+  authOpenidCopyFiles,
   generateCorsConfigOptions,
   generatePostgresConfigOptions,
   generateSwaggerConfigOptions,
 } from './constants';
-import { areKeysComplete, mapOptionsToArrayOfData } from './generator.helpers';
+import {
+  addModulesInPackageJson,
+  formatWithPrettier,
+  generateAuthModule,
+  generateEnvFile,
+  generateFile,
+  mapOptionsToArrayOfData,
+} from './generator.helpers';
 
 const execPromise = promisify(exec);
 
@@ -41,38 +53,11 @@ export class GeneratorService {
     generatedProjectFolder: string,
   ) => {
     const optionsToFiles = {
-      allExceptions: [
-        'common/filters/all-exceptions.filter.ts',
-        'common/types/app-request.ts',
-      ],
-      authJwt: [
-        'auth/dtos/',
-        'auth/guards/jwt-auth.guard.ts',
-        'auth/guards/refresh-token.guard.ts',
-        'auth/strategies/jwt.strategy.ts',
-        'auth/strategies/refresh-token.strategy.ts',
-        'auth/constants.ts',
-        'auth/auth.service.ts',
-        'auth/guards/roles.guard.ts',
-        'auth/decorators/',
-        'users/',
-        'roles/',
-        'database/',
-        'common/providers/database.providers.ts',
-        'test-route',
-      ],
-      authGoogle: [
-        'auth/guards/google-auth.guard.ts',
-        'auth/strategies/google.strategy.ts',
-      ],
-      authFacebook: [
-        'auth/guards/facebook-auth.guard.ts',
-        'auth/strategies/facebook.strategy.ts',
-      ],
-      authOpenid: [
-        'auth/guards/openid-auth.guard.ts',
-        'auth/strategies/openid.strategy.ts',
-      ],
+      allExceptions: allExceptionsCopyFiles,
+      authJwt: authJwtCopyFiles,
+      authGoogle: authGoogleCopyFiles,
+      authFacebook: authFacebookCopyFiles,
+      authOpenid: authOpenidCopyFiles,
       postgres: ['docker-compose.yml'],
     };
 
@@ -97,61 +82,6 @@ export class GeneratorService {
         ),
       ),
     );
-  };
-
-  private generateFile = async (
-    templateFileName: string,
-    data: Record<string, any>,
-    resultFileName: string,
-  ) => {
-    const template = await readFile(templateFileName, { encoding: 'utf8' });
-    const content = await ejs.render(template, data, {
-      async: true,
-    });
-
-    console.log({ template, content });
-
-    return writeFile(resultFileName, content);
-  };
-
-  private addModulesInPackageJson = async (
-    options: GenerateOptions,
-    generatedProjectFolder: string,
-  ) => {
-    const optionsToModules = {
-      swagger: ['@nestjs/swagger'],
-      helmet: ['helmet'],
-      postgres: ['@nestjs/typeorm', 'typeorm', 'pg', 'dotenv'],
-      authJwt: [
-        'cookie-parser',
-        '@nestjs/passport',
-        '@nestjs/mongoose',
-        '@nestjs/jwt',
-        'mongoose',
-        'passport-jwt',
-        'bcrypt',
-        'class-transformer',
-        'class-validator',
-      ],
-      authGoogle: ['passport-google-oauth20'],
-      authFacebook: ['passport-facebook'],
-      authOpenid: ['openid-client'],
-    };
-
-    const packages = [
-      'express-session',
-      ...mapOptionsToArrayOfData(options, optionsToModules),
-    ];
-
-    try {
-      await execPromise(
-        `cd ${generatedProjectFolder} && npm install --save ${packages.join(
-          ' ',
-        )}`,
-      );
-    } catch (e) {
-      console.log(e);
-    }
   };
 
   // user of the generated project should run npm install
@@ -216,7 +146,7 @@ export class GeneratorService {
       ...options,
     };
 
-    return this.generateFile(
+    return generateFile(
       path.join(this.templatesFolder, 'main.ts.ejs'),
       data,
       path.join(process.cwd(), generatedProjectFolder, 'src', 'main.ts'),
@@ -252,102 +182,10 @@ export class GeneratorService {
       ...options,
     };
     console.log(data);
-    return this.generateFile(
+    return generateFile(
       path.join(this.templatesFolder, 'app.module.ts.ejs'),
       data,
       path.join(process.cwd(), generatedProjectFolder, 'src', 'app.module.ts'),
-    );
-  };
-
-  private formatWithPrettier = async (generatedProjectFolder: string) => {
-    await execPromise(`cd ${generatedProjectFolder} && npm run format`);
-  };
-
-  private generateAuthModule = async (
-    options: GenerateOptions,
-    generatedProjectFolder: string,
-  ) => {
-    if (!options.authJwt) {
-      return;
-    }
-
-    await Promise.all([
-      this.generateFile(
-        path.join(this.templatesFolder, 'auth', 'auth.module.ts.ejs'),
-        options,
-        path.join(
-          process.cwd(),
-          generatedProjectFolder,
-          'src',
-          'auth',
-          'auth.module.ts',
-        ),
-      ),
-      this.generateFile(
-        path.join(this.templatesFolder, 'auth', 'auth.controller.ts.ejs'),
-        options,
-        path.join(
-          process.cwd(),
-          generatedProjectFolder,
-          'src',
-          'auth',
-          'auth.controller.ts',
-        ),
-      ),
-    ]);
-  };
-
-  private generateEnvFile = async (
-    options: GenerateOptions,
-    generatedProjectFolder: string,
-  ): Promise<void> => {
-    const { authJwt, strategies } = options;
-
-    if (!authJwt) {
-      return;
-    }
-
-    const optionsToEnv: Record<string, string[]> = {};
-    const authLength = 4;
-    Object.keys(strategies).forEach((strategyKey) => {
-      const strategy = strategies[strategyKey as keyof AuthData];
-      if (areKeysComplete(strategy) && strategy) {
-        const prefix = 'NEST_PUBLIC_';
-
-        const suffix = '_CLIENT_SECRET';
-
-        optionsToEnv[strategyKey] = [
-          `
-    ${prefix}${strategyKey.slice(authLength).toUpperCase()}_CLIENT_ID=${
-      strategy.clientID
-    }
-    ${strategyKey.slice(authLength).toUpperCase()}${suffix}=${
-      strategy.clientSecret
-    }
-    ${prefix}${strategyKey.slice(authLength).toUpperCase()}_CALLBACK_URL=${
-      strategy.callbackURL
-    }
-    ${
-      strategyKey === 'authOpenid'
-        ? `TRUST_ISSUER_URL=${strategy.trustIssuer || ''}`
-        : ''
-    }
-    `,
-        ];
-      }
-    });
-
-    const {
-      authFacebook: fb,
-      authGoogle: google,
-      authOpenid: openid,
-    } = optionsToEnv;
-    const data = { authFacebook: fb, authGoogle: google, authOpenid: openid };
-
-    return this.generateFile(
-      path.join(this.templatesFolder, '.env.example.ejs'),
-      data,
-      path.join(process.cwd(), generatedProjectFolder, '.', '.env'),
     );
   };
 
@@ -377,11 +215,21 @@ export class GeneratorService {
 
       this.generateMainTs(normalizedOptions, generatedProjectFolder),
       this.generateAppModule(normalizedOptions, generatedProjectFolder),
-      this.generateAuthModule(normalizedOptions, generatedProjectFolder),
 
-      this.addModulesInPackageJson(normalizedOptions, generatedProjectFolder),
-      this.formatWithPrettier(generatedProjectFolder),
-      this.generateEnvFile(normalizedOptions, generatedProjectFolder),
+      generateAuthModule(
+        normalizedOptions,
+        generatedProjectFolder,
+        this.templatesFolder,
+      ),
+
+      addModulesInPackageJson(normalizedOptions, generatedProjectFolder),
+      formatWithPrettier(generatedProjectFolder),
+
+      generateEnvFile(
+        normalizedOptions,
+        generatedProjectFolder,
+        this.templatesFolder,
+      ),
     ]);
 
     await this.deleteNodeModules(generatedProjectFolder);
