@@ -221,15 +221,13 @@ export class GeneratorService {
         generatedProjectFolder,
         this.templatesFolder,
       ),
-
       addModulesInPackageJson(normalizedOptions, generatedProjectFolder),
-      formatWithPrettier(generatedProjectFolder),
-
       generateEnvFile(
         normalizedOptions,
         generatedProjectFolder,
         this.templatesFolder,
       ),
+      formatWithPrettier(generatedProjectFolder),
     ]);
 
     await this.deleteNodeModules(generatedProjectFolder);

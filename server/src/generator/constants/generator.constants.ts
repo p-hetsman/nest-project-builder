@@ -53,7 +53,9 @@ export const authJwtCopyFiles = [
   'auth/constants.ts',
   'auth/auth.service.ts',
   'auth/guards/roles.guard.ts',
+  'auth/guards/casl.guard.ts',
   'auth/decorators/',
+  'auth/policies/',
   'users/',
   'roles/',
   'database/',
@@ -86,4 +88,5 @@ export const packageJsonAuthJwt = [
   'bcrypt',
   'class-transformer',
   'class-validator',
+  '@casl/ability',
 ];
