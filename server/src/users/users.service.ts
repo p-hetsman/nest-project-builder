@@ -80,7 +80,14 @@ export class UsersService {
       .exec();
   }
 
-  async remove(id: string): Promise<UserDocument> {
-    return (await this.userModel.findByIdAndDelete(id).exec()).value;
+  async remove(id: string): Promise<UserDocument | null> {
+    try {
+      const removedRole = (await this.userModel
+        .findByIdAndDelete(id)
+        .exec()) as unknown as UserDocument | null;
+      return removedRole || null;
+    } catch (error) {
+      return null;
+    }
   }
 }

@@ -181,7 +181,7 @@ export class GeneratorService {
       ),
       ...options,
     };
-    console.log(data);
+
     return generateFile(
       path.join(this.templatesFolder, 'app.module.ts.ejs'),
       data,

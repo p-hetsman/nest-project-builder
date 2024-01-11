@@ -1,26 +1,32 @@
-import { Document } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Action } from 'src/auth/policies/constants';
+import { Document } from 'mongoose';
+import { Action } from '../roles.constants';
 
-export class Permission {
+
+@Schema()
+export class Permission extends Document {
   @Prop({
-    type: String,
+    required: true,
     enum: Object.values(Action),
   })
   action: Action;
 
-  @Prop({ type: String })
+  @Prop({ required: true })
   subject: string;
 }
+
+export const PermissionSchema = SchemaFactory.createForClass(Permission);
+
 @Schema()
-export class Role {
-  @Prop({ type: String, unique: true, required: true })
+export class Role extends Document {
+  @Prop({ required: true, unique: true })
   name: string;
 
-  @Prop({ type: [String] })
+  @Prop([PermissionSchema])
   permissions: Permission[];
 }
 
 export type RoleDocument = Role & Document;
 
 export const RoleSchema = SchemaFactory.createForClass(Role);
+

@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import { Action } from 'src/auth/policies/constants';
+import { Action } from '../roles.constants';
 
 @Schema()
 export class Permission extends Document {

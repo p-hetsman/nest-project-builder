@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { Model } from 'mongoose';
 
-import { Role, RoleDocument } from './schemas/role.schema';
+import { Permission, Role, RoleDocument } from './schemas/role.schema';
 import { UpdateRoleDto } from './dto/update-role.dto';
 
 @Injectable()
@@ -19,16 +19,46 @@ export class RolesService {
     return this.roleModel.findById(id);
   }
 
-  async create(createRoleDto: Role): Promise<RoleDocument> {
-    const createdRole = new this.roleModel(createRoleDto);
-
+  async create(name: string, permissions: Permission[]): Promise<RoleDocument> {
+    const createdRole = new this.roleModel({ name, permissions });
     return createdRole.save();
   }
 
   async findAll(): Promise<RoleDocument[]> {
     return this.roleModel.find().exec();
   }
+  async findAllNames(): Promise<string[]> {
+    try {
+      const roles = await this.roleModel.find({}, 'name').lean();
+      const names = roles.map((role) => role.name);
+      return names;
+    } catch (error) {
+      return error;
+    }
+  }
+  async findAllPermissions(): Promise<RoleDocument[]> {
+    const pipeline = [
+      { $unwind: '$permissions' },
+      {
+        $group: {
+          _id: {
+            action: '$permissions.action',
+            subject: '$permissions.subject',
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          action: '$_id.action',
+          subject: '$_id.subject',
+        },
+      },
+    ];
 
+    const result = await this.roleModel.aggregate(pipeline).exec();
+    return result;
+  }
   async update(
     id: string,
     updateRoleDto: UpdateRoleDto,
@@ -38,7 +68,14 @@ export class RolesService {
       .exec();
   }
 
-  async remove(id: string): Promise<RoleDocument> {
-    return (await this.roleModel.findByIdAndDelete(id).exec()).value;
+  async remove(id: string): Promise<RoleDocument | null> {
+    try {
+      const removedRole = (await this.roleModel
+        .findByIdAndDelete(id)
+        .exec()) as unknown as RoleDocument | null;
+      return removedRole || null;
+    } catch (error) {
+      return null;
+    }
   }
 }

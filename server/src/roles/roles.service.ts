@@ -68,7 +68,14 @@ export class RolesService {
       .exec();
   }
 
-  async remove(id: string): Promise<RoleDocument> {
-    return (await this.roleModel.findByIdAndDelete(id).exec()).value;
+  async remove(id: string): Promise<RoleDocument | null> {
+    try {
+      const removedRole = (await this.roleModel
+        .findByIdAndDelete(id)
+        .exec()) as unknown as RoleDocument | null;
+      return removedRole || null;
+    } catch (error) {
+      return null;
+    }
   }
 }

@@ -4,10 +4,3 @@ export const CHECK_POLICIES_KEY = 'check_policy';
 export const CheckPolicies = (...handlers: string[]) =>
   SetMetadata(CHECK_POLICIES_KEY, handlers);
 
-export enum Action {
-  Manage = 'manage',
-  Create = 'create',
-  Read = 'read',
-  Update = 'update',
-  Delete = 'delete',
-}
