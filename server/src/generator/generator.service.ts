@@ -9,6 +9,7 @@ import { GenerateOptions } from './types/generate-options';
 
 import {
   addModulesInPackageJson,
+  copyDbFiles,
   copyFilesToRoot,
   copyFilesToSrc,
   formatWithPrettier,
@@ -66,6 +67,7 @@ export class GeneratorService {
       generateAuthModule(normalizedOptions, generatedProjectFolder),
       addModulesInPackageJson(normalizedOptions, generatedProjectFolder),
       generateEnvFile(normalizedOptions, generatedProjectFolder),
+      copyDbFiles(generatedProjectFolder),
       formatWithPrettier(generatedProjectFolder),
     ]);
 

@@ -20,6 +20,7 @@ import {
   generateCorsConfigOptions,
   generatePostgresConfigOptions,
   generateSwaggerConfigOptions,
+  mongoDBCopyFiles,
   packageJsonAuthJwt,
 } from './constants';
 
@@ -402,6 +403,18 @@ export const copyFilesToSrc = async (
   };
 
   const filesToCopy = mapOptionsToArrayOfData(options, optionsToFiles);
+
+  const copyPromises = filesToCopy.map((file) =>
+    fs.copy(
+      path.join(templatesFolder, file),
+      path.join(process.cwd(), generatedProjectFolder, 'src', file),
+    ),
+  );
+
+  return Promise.all(copyPromises);
+};
+export const copyDbFiles = async (generatedProjectFolder: string) => {
+  const filesToCopy = mongoDBCopyFiles;
 
   const copyPromises = filesToCopy.map((file) =>
     fs.copy(

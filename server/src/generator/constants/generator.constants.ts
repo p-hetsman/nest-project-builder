@@ -56,10 +56,6 @@ export const authJwtCopyFiles = [
   'auth/guards/casl.guard.ts',
   'auth/decorators/',
   'auth/policies/',
-  'users/',
-  'roles/',
-  'database/',
-  'common/providers/database.providers.ts',
   'test-route',
 ];
 export const authGoogleCopyFiles = [
@@ -89,4 +85,10 @@ export const packageJsonAuthJwt = [
   'class-transformer',
   'class-validator',
   '@casl/ability',
+];
+export const mongoDBCopyFiles = [
+  'users/',
+  'roles/',
+  'database/',
+  'common/providers/database.providers.ts',
 ];

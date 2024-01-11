@@ -7,9 +7,6 @@ import {
   UseGuards,
   Request,
   Body,
-  <%if (authGoogle || authFacebook || authOpenid) { %>
-  Req,
-  <% } %>
 } from '@nestjs/common';
 
 import { LoginDto } from './dtos/login.dto';
@@ -51,7 +48,7 @@ export class AuthController {
 
   @UseGuards(RefreshTokenGuard)
   @Get('refresh')
-  refreshTokens(@Req() req) {
+  refreshTokens(@Request() req) {
     const userId = req.user.sub;
     const refreshToken = req.user.refreshToken;
 
@@ -72,7 +69,7 @@ export class AuthController {
 
     @Get('google/callback')
     @UseGuards(GoogleAuthGuard)
-    async googleLoginCallback(@Req() req) {
+    async googleLoginCallback(@Request() req) {
       return this.authService.loginSSO(req.user.username);
     }
   <% } %>
@@ -84,7 +81,7 @@ export class AuthController {
 
     @Get('facebook/callback')
     @UseGuards(FacebookAuthGuard)
-    async facebookLoginCallback(@Req() req) {
+    async facebookLoginCallback(@Request() req) {
       return this.authService.loginSSO(req.user.username);
     }
   <% } %>
@@ -96,7 +93,7 @@ export class AuthController {
 
     @Get('openid/callback')
     @UseGuards(OpenidAuthGuard)
-    async openidLoginCallback(@Req() req) {
+    async openidLoginCallback(@Request() req) {
       return this.authService.loginSSO(req.user.username);
     }
   <% } %>

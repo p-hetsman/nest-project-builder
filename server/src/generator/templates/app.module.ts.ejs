@@ -2,11 +2,11 @@ import { Module } from '@nestjs/common';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { RolesModule } from './roles/roles.module';
+import { UsersModule } from './users/users.module';
 
-<%if (authGoogle) { %>
-  import { UsersModule } from './users/users.module';
+<%if (authJwt) { %>
   import { AuthModule } from './auth/auth.module';
-  import { DatabaseModule } from './database/database.module';
 <% } %>
 
 
@@ -14,15 +14,17 @@ import { AppService } from './app.service';
   <%- imports %>
   <% }) -%>
 
-<%if (authGoogle) { %>
+<%if (authJwt) { %>
   import { CaslGuard } from './auth/guards/casl.guard';
   import { JwtService } from '@nestjs/jwt';
 <% } %>
 
 @Module({
   imports: [
-  <%if (authGoogle) { %>
-    UsersModule, AuthModule, DatabaseModule
+  RolesModule,
+  UsersModule, 
+  <%if (authJwt) { %>
+    AuthModule 
   <% } %>
   
   <% moduleImports.forEach(moduleImports => { -%>
@@ -30,13 +32,13 @@ import { AppService } from './app.service';
     <% }) -%>
     ],
   controllers: [AppController,
-  <%if (controllersImports) { %>
+  <%if (authJwt) { %>
     TestController
   <% } %>
   ],
   providers: [AppService,
 
-  <%if (authGoogle) { %>
+  <%if (authJwt) { %>
     CaslGuard, JwtService
   <% } %>
   ]
