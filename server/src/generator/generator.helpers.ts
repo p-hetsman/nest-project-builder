@@ -4,20 +4,43 @@ import { exec } from 'node:child_process';
 import { readFile, writeFile } from 'node:fs/promises';
 
 import * as ejs from 'ejs';
+import * as fs from 'fs-extra';
 
 import {
   AuthData,
   AuthStrategy,
   GenerateOptions,
 } from './types/generate-options';
-import { packageJsonAuthJwt } from './constants';
+import {
+  allExceptionsCopyFiles,
+  authFacebookCopyFiles,
+  authGoogleCopyFiles,
+  authJwtCopyFiles,
+  authOpenidCopyFiles,
+  generateCorsConfigOptions,
+  generatePostgresConfigOptions,
+  generateSwaggerConfigOptions,
+  packageJsonAuthJwt,
+} from './constants';
 
 const execPromise = promisify(exec);
+const templatesFolder = path.join(
+  process.cwd(),
+  'src',
+  'generator',
+  'templates',
+);
 
+/**
+ * Retrieves data from a project file.
+ *
+ * @param {string} path - The path to the file.
+ * @return {Promise<any>} The data from the file.
+ */
 export async function getProjectFileData(path: string) {
   try {
-    const file = await readFile(path, 'utf8');
-    const fileData = JSON.parse(file);
+    const fileContent = await readFile(path, 'utf8');
+    const fileData = JSON.parse(fileContent);
     return fileData;
   } catch (error) {
     console.error(`Error reading file ${path}:`, error);
@@ -25,44 +48,38 @@ export async function getProjectFileData(path: string) {
   }
 }
 
+/**
+ * Maps the options object to an array of data based on the provided optionsTo object.
+ *
+ * @param {GenerateOptions} options - The options object.
+ * @param {Record<string, T[]>} optionsTo - The optionsTo object.
+ * @return {T[]} An array of data based on the mapping of options to optionsTo.
+ */
 export const mapOptionsToArrayOfData = <T>(
   options: GenerateOptions,
   optionsTo: Record<string, T[]>,
 ) => {
-  return Object.keys(options).reduce((acc, key) => {
-    if (optionsTo[key] && options[key]) {
-      return [...acc, ...optionsTo[key]];
-    }
+  const result: T[] = [];
 
-    return acc;
-  }, []);
+  for (const key of Object.keys(options)) {
+    if (optionsTo[key] && options[key]) {
+      result.push(...optionsTo[key]);
+    }
+  }
+
+  return result;
 };
+/**
+ * Determines if the keys required for authentication strategy are complete.
+ *
+ * @param {AuthStrategy} strategy - The authentication strategy object.
+ * @return {boolean} Returns true if the keys are complete, false otherwise.
+ */
 export function areKeysComplete(strategy: AuthStrategy): boolean {
-  return (
-    'clientID' in strategy &&
-    'clientSecret' in strategy &&
-    'callbackURL' in strategy
-  );
+  const { clientID, clientSecret, callbackURL } = strategy;
+  return !!clientID && !!clientSecret && !!callbackURL;
 }
 
-export const strategies = {
-  authGoogle: {
-    clientID: 'googleClientId',
-    clientSecret: 'googleClientSecret',
-    callbackURL: 'googleCallbackURL',
-  },
-  authFacebook: {
-    clientID: 'facebookClientId',
-    clientSecret: 'facebookClientSecret',
-    callbackURL: 'facebookCallbackURL',
-  },
-  authOpenid: {
-    clientID: 'openidClientId',
-    clientSecret: 'openidClientSecret',
-    callbackURL: 'openidCallbackURL',
-    trustIssuer: 'trustIssuerURL',
-  },
-};
 /**
  * Generates a file by rendering a template with the provided data and saves it to the specified location.
  *
@@ -99,7 +116,6 @@ export const generateFile = async (
 export const generateEnvFile = async (
   options: GenerateOptions,
   generatedProjectFolder: string,
-  templatesFolder: string,
 ): Promise<void> => {
   const { authJwt, strategies } = options;
 
@@ -108,34 +124,33 @@ export const generateEnvFile = async (
   }
 
   const optionsToEnv: Record<string, string[]> = {};
-  const authLength = 4;
-  Object.keys(strategies).forEach((strategyKey) => {
+  const authLength = 'auth'.length;
+
+  for (const strategyKey of Object.keys(strategies)) {
     const strategy = strategies[strategyKey as keyof AuthData];
+
     if (areKeysComplete(strategy) && strategy) {
       const prefix = 'NEST_PUBLIC_';
-
       const suffix = '_CLIENT_SECRET';
 
       optionsToEnv[strategyKey] = [
-        `
-  ${prefix}${strategyKey.slice(authLength).toUpperCase()}_CLIENT_ID=${
-    strategy.clientID
-  }
-  ${strategyKey.slice(authLength).toUpperCase()}${suffix}=${
-    strategy.clientSecret
-  }
-  ${prefix}${strategyKey.slice(authLength).toUpperCase()}_CALLBACK_URL=${
-    strategy.callbackURL
-  }
-  ${
-    strategyKey === 'authOpenid'
-      ? `TRUST_ISSUER_URL=${strategy.trustIssuer || ''}`
-      : ''
-  }
-  `,
+        `${prefix}${strategyKey.slice(authLength).toUpperCase()}_CLIENT_ID=${
+          strategy.clientID
+        }`,
+        `${strategyKey.slice(authLength).toUpperCase()}${suffix}=${
+          strategy.clientSecret
+        }`,
+        `${prefix}${strategyKey.slice(authLength).toUpperCase()}_CALLBACK_URL=${
+          strategy.callbackURL
+        }`,
+        `${
+          strategyKey === 'authOpenid'
+            ? `TRUST_ISSUER_URL=${strategy.trustIssuer || ''}`
+            : ''
+        }`,
       ];
     }
-  });
+  }
 
   const {
     authFacebook: fb,
@@ -208,7 +223,6 @@ export const addModulesInPackageJson = async (
 export const generateAuthModule = async (
   options: GenerateOptions,
   generatedProjectFolder: string,
-  templatesFolder: string,
 ) => {
   if (!options.authJwt) {
     return;
@@ -243,4 +257,158 @@ export const generateAuthModule = async (
     generateFile(moduleTemplatePath, options, moduleOutputPath),
     generateFile(controllerTemplatePath, options, controllerOutputPath),
   ]);
+};
+/**
+ * Generates the app module for the given options and project folder.
+ *
+ * @param {GenerateOptions} options - The options for generating the app module.
+ * @param {string} generatedProjectFolder - The folder where the generated project will be placed.
+ * @return {Promise<void>} - A promise that resolves once the app module is generated.
+ */
+export const generateAppModule = async (
+  options: GenerateOptions,
+  generatedProjectFolder: string,
+) => {
+  const imports = {
+    postgres: [
+      `import { TypeOrmModule } from '@nestjs/typeorm';`,
+      `import 'dotenv/config';`,
+    ],
+    authJwt: [`import { TestController } from './test-route/test.controller';`],
+  };
+  const moduleImports = {
+    postgres: [generatePostgresConfigOptions()],
+  };
+  const controllersImports = {
+    authJwt: ['TestController'],
+  };
+  const data = {
+    imports: mapOptionsToArrayOfData(options, imports),
+    moduleImports: mapOptionsToArrayOfData(options, moduleImports),
+    controllersImports: mapOptionsToArrayOfData(options, controllersImports),
+    ...options,
+  };
+
+  return generateFile(
+    path.join(templatesFolder, 'app.module.ts.ejs'),
+    data,
+    path.join(process.cwd(), generatedProjectFolder, 'src', 'app.module.ts'),
+  );
+};
+/**
+ * Generates the main.ts file for the project.
+ *
+ * @param {GenerateOptions} options - The options for generating the main.ts file.
+ * @param {string} generatedProjectFolder - The path of the generated project folder.
+ * @return {Promise<void>} - A promise that resolves when the main.ts file is generated.
+ */
+export const generateMainTs = async (
+  options: GenerateOptions,
+  generatedProjectFolder: string,
+) => {
+  const imports = {
+    allExceptions: [
+      `import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';`,
+    ],
+    swagger: [
+      `import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';`,
+    ],
+    helmet: [`import helmet from 'helmet';`],
+  };
+
+  const globalFilters = {
+    allExceptions: ['app.useGlobalFilters(new AllExceptionsFilter());'],
+  };
+
+  const globalPipes = {
+    validation: ['app.useGlobalPipes(new ValidationPipe());'],
+  };
+
+  const appConfig = {
+    cors: [generateCorsConfigOptions()],
+    swagger: [await generateSwaggerConfigOptions()],
+    helmet: ['app.use(helmet());'],
+  };
+
+  const nestFactoryOptions = {
+    logger: [
+      {
+        key: 'logger',
+        value: `['debug', 'verbose', 'log', 'warn', 'error']`,
+      },
+    ],
+  };
+
+  const nestjsCommonImport = {
+    validation: ['', 'ValidationPipe'],
+  };
+
+  const data = {
+    nestjsCommonImport: mapOptionsToArrayOfData(
+      options,
+      nestjsCommonImport,
+    ).join(', '),
+    imports: mapOptionsToArrayOfData(options, imports),
+    nestFactoryOptions: mapOptionsToArrayOfData(options, nestFactoryOptions),
+    globalPipes: mapOptionsToArrayOfData(options, globalPipes),
+    globalFilters: mapOptionsToArrayOfData(options, globalFilters),
+    globalOptionsConfig: mapOptionsToArrayOfData(options, appConfig),
+    ...options,
+  };
+
+  return generateFile(
+    path.join(templatesFolder, 'main.ts.ejs'),
+    data,
+    path.join(process.cwd(), generatedProjectFolder, 'src', 'main.ts'),
+  );
+};
+
+/**
+ * Copies specified files to the root of the generated project folder.
+ *
+ * @param {string} generatedProjectFolder - The path of the generated project folder.
+ * @return {Promise<void[]>} A promise that resolves when all the files are copied.
+ */
+export const copyFilesToRoot = async (generatedProjectFolder: string) => {
+  const filesToCopy = ['Dockerfile'];
+
+  const copyPromises = filesToCopy.map((file) =>
+    fs.copy(
+      path.join(templatesFolder, file),
+      path.join(process.cwd(), generatedProjectFolder, file),
+    ),
+  );
+
+  return Promise.all(copyPromises);
+};
+/**
+ * Copies files to the 'src' directory of the generated project folder.
+ *
+ * @param {GenerateOptions} options - The options for generating the files.
+ * @param {string} generatedProjectFolder - The path of the generated project folder.
+ * @return {Promise<void[]>} A promise that resolves when all the files are copied.
+ */
+export const copyFilesToSrc = async (
+  options: GenerateOptions,
+  generatedProjectFolder: string,
+) => {
+  const optionsToFiles = {
+    allExceptions: allExceptionsCopyFiles,
+    authJwt: authJwtCopyFiles,
+    authGoogle: authGoogleCopyFiles,
+    authFacebook: authFacebookCopyFiles,
+    authOpenid: authOpenidCopyFiles,
+    postgres: ['docker-compose.yml'],
+  };
+
+  const filesToCopy = mapOptionsToArrayOfData(options, optionsToFiles);
+
+  const copyPromises = filesToCopy.map((file) =>
+    fs.copy(
+      path.join(templatesFolder, file),
+      path.join(process.cwd(), generatedProjectFolder, 'src', file),
+    ),
+  );
+
+  return Promise.all(copyPromises);
 };
