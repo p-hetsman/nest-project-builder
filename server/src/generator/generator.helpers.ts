@@ -129,8 +129,7 @@ export const generateEnvFile = async (
 
   for (const strategyKey of Object.keys(strategies)) {
     const strategy = strategies[strategyKey as keyof AuthData];
-
-    if (areKeysComplete(strategy) && strategy) {
+    if (areKeysComplete(strategy) && strategy && options[strategyKey]) {
       const prefix = 'NEST_PUBLIC_';
       const suffix = '_CLIENT_SECRET';
 
