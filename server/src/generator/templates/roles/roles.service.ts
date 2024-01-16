@@ -1,9 +1,14 @@
-import { Injectable, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Model } from 'mongoose';
 
 import { Permission, Role, RoleDocument } from './schemas/role.schema';
 import { UpdateRoleDto } from './dto/update-role.dto';
-
+import { Action } from './roles.constants';
 @Injectable()
 export class RolesService {
   constructor(
@@ -67,6 +72,30 @@ export class RolesService {
       .findByIdAndUpdate(id, updateRoleDto, { new: true })
       .exec();
   }
+  async updateWithValidation(id: string, updatedRole: Partial<Role>) {
+    try {
+      const existingRole = await this.findById(id);
+
+      if (!existingRole) {
+        throw new NotFoundException(`Role with ID ${id} not found.`);
+      }
+
+      if (updatedRole.name) {
+        existingRole.name = updatedRole.name;
+      }
+
+      if (updatedRole.permissions !== undefined) {
+        this.validateAndUpdatePermissions(
+          existingRole,
+          updatedRole.permissions,
+        );
+      }
+
+      return await existingRole.save();
+    } catch (error) {
+      throw new BadRequestException(`Error updating role: ${error.message}`);
+    }
+  }
 
   async remove(id: string): Promise<RoleDocument | null> {
     try {
@@ -77,5 +106,53 @@ export class RolesService {
     } catch (error) {
       return null;
     }
+  }
+  /**
+   * Validates an object.
+   *
+   * @param {Partial<Role>} obj - The object to validate.
+   * @returns {boolean} Returns true if the object is valid, false otherwise.
+   */
+  private validateObject(obj: Partial<Role>): boolean {
+    const validActions = Object.values(Action);
+
+    for (const permission of obj.permissions) {
+      if (!validActions.includes(permission.action)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+  /**
+   * Validates and updates the permissions of an existing role.
+   *
+   * @param {Role} existingRole - The existing role to update.
+   * @param {PermissionS[]} permissions - The new permissions to assign to the role.
+   * @throws {BadRequestException} If permissions is not an array or if it is empty.
+   * @throws {BadRequestException} If the updatedRole has invalid permissions.
+   */
+  private validateAndUpdatePermissions(
+    existingRole: Role,
+    permissions: Permission[],
+  ) {
+    if (!Array.isArray(permissions)) {
+      throw new BadRequestException(`Permissions should be an array.`);
+    }
+
+    if (permissions.length === 0) {
+      throw new BadRequestException(`Permissions array should not be empty.`);
+    }
+
+    const updatedRole: Partial<Role> = {
+      name: existingRole.name,
+      permissions: permissions,
+    };
+
+    if (!this.validateObject(updatedRole)) {
+      throw new BadRequestException(`Invalid permissions in the updatedRole.`);
+    }
+
+    existingRole.permissions = permissions;
   }
 }
