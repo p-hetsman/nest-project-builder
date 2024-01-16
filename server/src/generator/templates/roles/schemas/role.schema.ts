@@ -1,7 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import { Action } from '../roles.constants';
-
+import { Action, existingEntities } from '../roles.constants';
 
 @Schema()
 export class Permission extends Document {
@@ -10,8 +9,10 @@ export class Permission extends Document {
     enum: Object.values(Action),
   })
   action: Action;
-
-  @Prop({ required: true })
+  @Prop({
+    required: true,
+    enum: existingEntities,
+  })
   subject: string;
 }
 
@@ -29,4 +30,3 @@ export class Role extends Document {
 export type RoleDocument = Role & Document;
 
 export const RoleSchema = SchemaFactory.createForClass(Role);
-

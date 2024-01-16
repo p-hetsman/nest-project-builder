@@ -7,8 +7,8 @@ import {
   Param,
   Put,
 } from '@nestjs/common';
-import { RolesService } from './roles.service';
 import { Permission, Role } from './schemas/role.schema';
+import { RolesService } from './roles.service';
 
 @Controller('roles')
 export class RoleCreatorController {

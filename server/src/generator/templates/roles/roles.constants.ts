@@ -5,3 +5,4 @@ export enum Action {
     Update = 'update',
     Delete = 'delete',
 }
+export const existingEntities = ['all', 'User', 'Role'];

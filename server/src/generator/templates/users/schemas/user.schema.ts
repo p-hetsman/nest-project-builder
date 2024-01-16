@@ -1,13 +1,14 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
-import { RoleDocument, RoleSchema } from '../../roles/schemas/role.schema';
+import { Document, SchemaTypes } from 'mongoose';
+import { RoleDocument } from '../../roles/schemas/role.schema';
+
 
 @Schema()
 export class User {
   @Prop({ type: String, unique: true, required: true })
   username: string;
 
-  @Prop({ type: RoleSchema, default: 'user' })
+  @Prop({ type: SchemaTypes.ObjectId, ref: 'Role', default: 'user' })
   role: RoleDocument;
 
   @Prop({ type: String })

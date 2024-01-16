@@ -1,14 +1,15 @@
 import {
   Injectable,
   Inject,
-  BadRequestException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { Model } from 'mongoose';
 
 import { Permission, Role, RoleDocument } from './schemas/role.schema';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { Action } from './roles.constants';
+
 @Injectable()
 export class RolesService {
   constructor(
