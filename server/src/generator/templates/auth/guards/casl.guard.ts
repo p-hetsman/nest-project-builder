@@ -63,9 +63,7 @@ export class CaslGuard implements CanActivate {
 
       request.user = payload;
 
-      const user = (
-        await this.usersService.findByIdWithRoleDetails(payload.sub)
-      )[0];
+      const user = await this.usersService.findById(payload.sub);
 
       if (!user || !user.role) {
         throw new UnauthorizedException('User or role not found.');

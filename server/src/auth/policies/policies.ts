@@ -1,8 +1,8 @@
 import { createMongoAbility, AbilityBuilder } from '@casl/ability';
-import { UserPolicyDto } from './policies-user.dto';
+import { UserDocument } from 'src/users/schemas/user.schema';
 
 export const defineAbilitiesFor = (
-  user: UserPolicyDto,
+  user: UserDocument,
   { action, resource }: { action: string; resource: string },
 ) => {
   const { can, build } = new AbilityBuilder(createMongoAbility);

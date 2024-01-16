@@ -3,7 +3,6 @@ import { Injectable, Inject } from '@nestjs/common';
 
 import { User, UserDocument } from './schemas/user.schema';
 import { UpdateUserDto } from './dto/update-user.dto';
-import * as mongoose from 'mongoose';
 
 @Injectable()
 export class UsersService {
@@ -13,53 +12,17 @@ export class UsersService {
   ) { }
 
   async findOne(username: string): Promise<UserDocument> {
-    return this.userModel.findOne({ username }).exec();
+    return this.userModel
+      .findOne({ username })
+      .populate({
+        path: 'role',
+        select: { permissions: { _id: 0 }, _id: 0 },
+      })
+      .exec();
   }
 
   async findById(id: string): Promise<UserDocument> {
-    return this.userModel.findById(id).populate('role').exec();
-  }
-  async findByIdWithRoleDetails(id: string) {
-    const userId = new mongoose.Types.ObjectId(id);
-    const pipeline = [
-      {
-        $match: {
-          _id: userId,
-        },
-      },
-      {
-        $lookup: {
-          from: 'roles',
-          localField: 'role',
-          foreignField: '_id',
-          as: 'roles',
-        },
-      },
-      {
-        $project: {
-          _id: 1,
-          username: 1,
-          password: 1,
-          refreshToken: 1,
-          role: {
-            $arrayElemAt: ['$roles', 0],
-          },
-        },
-      },
-      {
-        $project: {
-          _id: 1,
-          username: 1,
-          'role.name': 1,
-          'role.permissions': 1,
-        },
-      },
-      {
-        $limit: 1,
-      },
-    ];
-
-    return this.userModel.aggregate(pipeline).exec();
+    return this.userModel.findById(id).populate('role').select('-_id').exec();
   }
   async create(createUserDto: User): Promise<UserDocument> {
     const createdUser = new this.userModel(createUserDto);
